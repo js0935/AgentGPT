@@ -1,3 +1,20 @@
+"""
+Agent API 路由 — AI Agent 任務生命週期端點
+==========================================
+
+此模組定義了 Agent 的核心 API 端點，涵蓋完整的任務生命週期：
+
+1. `/start`     — 根據目標產生初始任務列表
+2. `/analyze`   — 分析任務並選擇合適工具
+3. `/execute`   — 執行任務（串流回傳 LLM 回應）
+4. `/create`    — 根據執行結果產生後續任務
+5. `/summarize` — 彙總所有執行結果
+6. `/chat`      — 對已完成的執行結果進行對話
+7. `/tools`     — 列出所有可用的外部工具
+
+所有端點皆使用 FastAPI Depends 進行依賴注入與驗證。
+"""
+
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends
@@ -31,13 +48,12 @@ from reworkd_platform.web.api.agent.tools.tools import get_external_tools, get_t
 router = APIRouter()
 
 
-@router.post(
-    "/start",
-)
+@router.post("/start")
 async def start_tasks(
     req_body: AgentRun = Depends(agent_start_validator),
     agent_service: AgentService = Depends(get_agent_service(agent_start_validator)),
 ) -> NewTasksResponse:
+    """根據使用者目標，讓 AI 產生初始任務列表。"""
     new_tasks = await agent_service.start_goal_agent(goal=req_body.goal)
     return NewTasksResponse(newTasks=new_tasks, run_id=req_body.run_id)
 
@@ -47,6 +63,7 @@ async def analyze_tasks(
     req_body: AgentTaskAnalyze = Depends(agent_analyze_validator),
     agent_service: AgentService = Depends(get_agent_service(agent_analyze_validator)),
 ) -> Analysis:
+    """分析特定任務，決定要使用哪些工具來執行。"""
     return await agent_service.analyze_task_agent(
         goal=req_body.goal,
         task=req_body.task or "",
@@ -61,6 +78,11 @@ async def execute_tasks(
         get_agent_service(validator=agent_execute_validator, streaming=True),
     ),
 ) -> FastAPIStreamingResponse:
+    """
+    執行指定任務，以 Server-Sent Events (SSE) 串流回傳 LLM 回應。
+
+    使用 FastAPI 原生的 StreamingResponse，取代舊版的 lanarky。
+    """
     return await agent_service.execute_task_agent(
         goal=req_body.goal or "",
         task=req_body.task or "",
@@ -73,6 +95,7 @@ async def create_tasks(
     req_body: AgentTaskCreate = Depends(agent_create_validator),
     agent_service: AgentService = Depends(get_agent_service(agent_create_validator)),
 ) -> NewTasksResponse:
+    """根據執行結果與已完成任務，讓 AI 產生下一批子任務。"""
     new_tasks = await agent_service.create_tasks_agent(
         goal=req_body.goal,
         tasks=req_body.tasks or [],
@@ -94,6 +117,7 @@ async def summarize(
         ),
     ),
 ) -> FastAPIStreamingResponse:
+    """彙總所有任務的執行結果，產出一份總結報告。"""
     return await agent_service.summarize_task_agent(
         goal=req_body.goal or "",
         results=req_body.results,
@@ -111,6 +135,7 @@ async def chat(
         ),
     ),
 ) -> FastAPIStreamingResponse:
+    """針對已完成的執行結果進行對話式追問。"""
     return await agent_service.chat(
         message=req_body.message,
         results=req_body.results,
@@ -118,6 +143,8 @@ async def chat(
 
 
 class ToolModel(BaseModel):
+    """可供 Agent 使用的外部工具描述。"""
+
     name: str
     description: str
     color: str
@@ -125,11 +152,14 @@ class ToolModel(BaseModel):
 
 
 class ToolsResponse(BaseModel):
+    """工具列表回應。"""
+
     tools: List[ToolModel]
 
 
 @router.get("/tools")
 async def get_user_tools() -> ToolsResponse:
+    """列出所有目前可用的外部工具（如 Google 搜尋、Wikipedia 等）。"""
     tools = get_external_tools()
     formatted_tools = [
         ToolModel(

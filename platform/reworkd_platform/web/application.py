@@ -1,3 +1,13 @@
+"""
+AgentGPT FastAPI 應用程式工廠
+=============================
+
+負責建立 FastAPI 實例、註冊中介軟體（CORS）、掛載 API 路由、
+以及註冊啟動／關閉生命週期事件。
+
+所有 `/api` 路徑的請求都會由此分發至對應的 router。
+"""
+
 from importlib import metadata
 
 from fastapi import FastAPI
@@ -17,11 +27,16 @@ from reworkd_platform.web.lifetime import (
 
 def get_app() -> FastAPI:
     """
-    Get FastAPI application.
+    建立並回傳已完全配置的 FastAPI 應用實例。
 
-    This is the main constructor of an application.
+    配置項目包括：
+    - 日誌系統 (loguru)
+    - CORS 白名單（來自 settings.frontend_url）
+    - API 路由（前綴 /api）
+    - 自訂例外處理（PlatformaticError → JSON 錯誤回應）
+    - 啟動／關閉生命週期事件（資料庫連線等）
 
-    :return: application.
+    :return: 已配置的 FastAPI 應用實例
     """
     configure_logging()
 
@@ -43,11 +58,9 @@ def get_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # Adds startup and shutdown events.
     register_startup_event(app)
     register_shutdown_event(app)
 
-    # Main router for the API.
     app.include_router(router=api_router, prefix="/api")
 
     app.exception_handler(PlatformaticError)(platformatic_exception_handler)
