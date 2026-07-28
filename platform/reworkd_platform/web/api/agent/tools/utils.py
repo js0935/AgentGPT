@@ -1,10 +1,10 @@
 from dataclasses import dataclass
-from typing import List
+from typing import AsyncGenerator, List
 
 from fastapi.responses import StreamingResponse as FastAPIStreamingResponse
-from lanarky.responses import StreamingResponse
-from langchain import LLMChain
-from langchain.chat_models.base import BaseChatModel
+from langchain_core.language_models import BaseChatModel
+from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import Runnable
 
 
 @dataclass
@@ -31,6 +31,18 @@ class Snippet:
         return f"{{text: {self.text}}}"
 
 
+async def _stream_chain(
+    chain: Runnable,
+    inputs: dict,
+) -> AsyncGenerator[str, None]:
+    """Stream an LCEL chain's output chunk by chunk."""
+    async for chunk in chain.astream(inputs):
+        if isinstance(chunk, str):
+            yield chunk
+        elif hasattr(chunk, "content") and chunk.content:
+            yield chunk.content
+
+
 def summarize(
     model: BaseChatModel,
     language: str,
@@ -39,15 +51,10 @@ def summarize(
 ) -> FastAPIStreamingResponse:
     from reworkd_platform.web.api.agent.prompts import summarize_prompt
 
-    chain = LLMChain(llm=model, prompt=summarize_prompt)
+    chain: Runnable = summarize_prompt | model
 
-    return StreamingResponse.from_chain(
-        chain,
-        {
-            "goal": goal,
-            "language": language,
-            "text": text,
-        },
+    return FastAPIStreamingResponse(
+        _stream_chain(chain, {"goal": goal, "language": language, "text": text}),
         media_type="text/event-stream",
     )
 
@@ -61,16 +68,18 @@ def summarize_with_sources(
 ) -> FastAPIStreamingResponse:
     from reworkd_platform.web.api.agent.prompts import summarize_with_sources_prompt
 
-    chain = LLMChain(llm=model, prompt=summarize_with_sources_prompt)
+    chain: Runnable = summarize_with_sources_prompt | model
 
-    return StreamingResponse.from_chain(
-        chain,
-        {
-            "goal": goal,
-            "query": query,
-            "language": language,
-            "snippets": snippets,
-        },
+    return FastAPIStreamingResponse(
+        _stream_chain(
+            chain,
+            {
+                "goal": goal,
+                "query": query,
+                "language": language,
+                "snippets": snippets,
+            },
+        ),
         media_type="text/event-stream",
     )
 
@@ -84,15 +93,17 @@ def summarize_sid(
 ) -> FastAPIStreamingResponse:
     from reworkd_platform.web.api.agent.prompts import summarize_sid_prompt
 
-    chain = LLMChain(llm=model, prompt=summarize_sid_prompt)
+    chain: Runnable = summarize_sid_prompt | model
 
-    return StreamingResponse.from_chain(
-        chain,
-        {
-            "goal": goal,
-            "query": query,
-            "language": language,
-            "snippets": snippets,
-        },
+    return FastAPIStreamingResponse(
+        _stream_chain(
+            chain,
+            {
+                "goal": goal,
+                "query": query,
+                "language": language,
+                "snippets": snippets,
+            },
+        ),
         media_type="text/event-stream",
     )

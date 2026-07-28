@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from lanarky.responses import StreamingResponse
-from langchain.chat_models.base import BaseChatModel
+from fastapi.responses import StreamingResponse as FastAPIStreamingResponse
+from langchain_core.language_models import BaseChatModel
 
 from reworkd_platform.db.crud.oauth import OAuthCrud
 from reworkd_platform.schemas.user import UserBase
@@ -37,5 +37,5 @@ class Tool(ABC):
         input_str: str,
         user: UserBase,
         oauth_crud: OAuthCrud,
-    ) -> StreamingResponse:
+    ) -> FastAPIStreamingResponse:
         pass

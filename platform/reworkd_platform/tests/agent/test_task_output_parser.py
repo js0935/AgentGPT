@@ -1,7 +1,7 @@
 from typing import List, Type
 
 import pytest
-from langchain.schema import OutputParserException
+from langchain_core.output_parsers import OutputParserException
 
 from reworkd_platform.web.api.agent.task_output_parser import (
     TaskOutputParser,

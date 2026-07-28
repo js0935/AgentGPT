@@ -1,10 +1,26 @@
-from typing import Any
+from typing import Any, AsyncGenerator
 
-from lanarky.responses import StreamingResponse
-from langchain import WikipediaAPIWrapper
+from fastapi.responses import StreamingResponse as FastAPIStreamingResponse
+from langchain_community.utilities import WikipediaAPIWrapper
+from langchain_core.runnables import Runnable
 
 from reworkd_platform.web.api.agent.stream_mock import stream_string
 from reworkd_platform.web.api.agent.tools.tool import Tool
+
+
+async def _stream_chain(
+    chain: Runnable,
+    inputs: dict,
+) -> AsyncGenerator[str, None]:
+    """Stream an LCEL chain's output chunk by chunk."""
+    from reworkd_platform.web.api.agent.prompts import summarize_prompt
+
+    # For Wikipedia, we just stream the result directly
+    async for chunk in chain.astream(inputs):
+        if isinstance(chunk, str):
+            yield chunk
+        elif hasattr(chunk, "content") and chunk.content:
+            yield chunk.content
 
 
 class Wikipedia(Tool):
@@ -19,12 +35,7 @@ class Wikipedia(Tool):
 
     async def call(
         self, goal: str, task: str, input_str: str, *args: Any, **kwargs: Any
-    ) -> StreamingResponse:
-        wikipedia_client = WikipediaAPIWrapper(
-            wiki_client=None,  # Meta private value but mypy will complain its missing
-        )
-
-        # TODO: Make the below async
+    ) -> FastAPIStreamingResponse:
+        wikipedia_client = WikipediaAPIWrapper()
         wikipedia_search = wikipedia_client.run(input_str)
-        # return summarize_with_sources(self.model, self.language, goal, task, [wikipedia_search])
-        return stream_string("Wikipedia is currently not working")
+        return stream_string(wikipedia_search)

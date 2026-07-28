@@ -1,8 +1,8 @@
 from typing import Any
 
-import openai
 import replicate
 from fastapi.responses import StreamingResponse as FastAPIStreamingResponse
+from openai import OpenAI
 from replicate.exceptions import ModelError
 from replicate.exceptions import ReplicateError as ReplicateAPIError
 
@@ -34,14 +34,14 @@ async def get_replicate_image(input_str: str) -> str:
 
 # Use AI to generate an Image based on a prompt
 async def get_open_ai_image(input_str: str) -> str:
-    response = openai.Image.create(
-        api_key=settings.openai_api_key,
+    client = OpenAI(api_key=settings.openai_api_key)
+    response = client.images.generate(
         prompt=input_str,
         n=1,
         size="256x256",
     )
 
-    return response["data"][0]["url"]
+    return response.data[0].url if response.data else ""
 
 
 class Image(Tool):
