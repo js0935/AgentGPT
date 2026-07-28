@@ -1,4 +1,4 @@
-import {i18n} from "next-i18next";
+import i18n from "./i18n";
 
 type Namespace =
   'errors' | 'drawer'
