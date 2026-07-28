@@ -69,7 +69,6 @@ export const clientSchema = z.object({
     NEXT_PUBLIC_VERCEL_URL: z.string().default("http://localhost:3000"),
     NEXT_PUBLIC_BACKEND_URL: z.string().url().default("http://localhost:8000"),
     NEXT_PUBLIC_MAX_LOOPS: z.coerce.number().default(25),
-    NEXT_PUBLIC_PUSHER_APP_KEY: z.string().optional(),
 });
 
 /**
@@ -87,5 +86,4 @@ export const clientEnv = {
     NEXT_PUBLIC_FF_MOCK_MODE_ENABLED: process.env.NEXT_PUBLIC_FF_MOCK_MODE_ENABLED,
     NEXT_PUBLIC_FF_SID_ENABLED: process.env.NEXT_PUBLIC_FF_SID_ENABLED,
     NEXT_PUBLIC_MAX_LOOPS: process.env.NEXT_PUBLIC_MAX_LOOPS,
-    NEXT_PUBLIC_PUSHER_APP_KEY: process.env.NEXT_PUBLIC_PUSHER_APP_KEY,
 };
