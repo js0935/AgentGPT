@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { AnimatePresence } from "framer-motion";
-import { useTranslation } from "next-i18next";
+import { useTranslation } from "react-i18next";
 import React from "react";
 import { FaBars, FaTimesCircle } from "react-icons/fa";
 import { v1 } from "uuid";

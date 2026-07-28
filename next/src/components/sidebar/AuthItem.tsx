@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import { useRouter } from "next/router";
 import type { Session } from "next-auth";
-import { useTranslation } from "next-i18next";
+import { useTranslation } from "react-i18next";
 import type { FC } from "react";
 import React, { useState } from "react";
 import { BsThreeDots } from "react-icons/bs";

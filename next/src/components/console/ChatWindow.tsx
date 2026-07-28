@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { useTranslation } from "next-i18next";
+import { useTranslation } from "react-i18next";
 import type { ReactNode } from "react";
 import React, { useEffect, useRef, useState } from "react";
 import { FaArrowCircleDown, FaCommentDots } from "react-icons/fa";

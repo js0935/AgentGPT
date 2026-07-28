@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useTranslation } from "next-i18next";
+import { useTranslation } from "react-i18next";
 import type { KeyboardEvent, RefObject } from "react";
 import { useState } from "react";
 import { FaCog, FaPlay, FaStar } from "react-icons/fa";

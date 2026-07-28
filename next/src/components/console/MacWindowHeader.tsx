@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import * as htmlToImage from "html-to-image";
-import { useTranslation } from "next-i18next";
+import { useTranslation } from "react-i18next";
 import type { PropsWithChildren, ReactNode } from "react";
 import React from "react";
 import { CgExport } from "react-icons/cg";

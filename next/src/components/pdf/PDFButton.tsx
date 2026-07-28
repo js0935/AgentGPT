@@ -1,5 +1,5 @@
 import { pdf } from "@react-pdf/renderer";
-import { i18n } from "next-i18next";
+import { i18n } from "react-i18next";
 import React, { memo } from "react";
 import { FaFilePdf } from "react-icons/fa";
 

@@ -1,4 +1,4 @@
-import { useTranslation } from "next-i18next";
+import { useTranslation } from "react-i18next";
 import React, { useEffect, useState } from "react";
 import { FaDiscord, FaGithub } from "react-icons/fa";
 import {FaXTwitter} from 'react-icons/fa6';
