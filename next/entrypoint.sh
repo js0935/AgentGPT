@@ -10,7 +10,7 @@ dos2unix .env.temp
 cat .env.temp > .env
 rm .env.temp
 
-source .env
+. ./.env
 
 # Ensure DB is available before running Prisma commands
 ./wait-for-db.sh agentgpt_db 3307
