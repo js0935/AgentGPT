@@ -1,14 +1,11 @@
-from typing import Any, Callable, Dict, TypeVar
+import asyncio
+from typing import Any, Dict, TypeVar
 
-from langchain import BasePromptTemplate, LLMChain
-from langchain.chat_models.base import BaseChatModel
-from langchain.schema import BaseOutputParser, OutputParserException
-from openai.error import (
-    AuthenticationError,
-    InvalidRequestError,
-    RateLimitError,
-    ServiceUnavailableError,
-)
+from langchain_core.language_models import BaseChatModel
+from langchain_core.output_parsers import BaseOutputParser, OutputParserException
+from langchain_core.prompts import BasePromptTemplate
+from langchain_core.runnables import Runnable
+from loguru import logger
 
 from reworkd_platform.schemas.agent import ModelSettings
 from reworkd_platform.web.api.errors import OpenAIError
@@ -25,46 +22,6 @@ def parse_with_handling(parser: BaseOutputParser[T], completion: str) -> T:
         )
 
 
-async def openai_error_handler(
-    func: Callable[..., Any], *args: Any, settings: ModelSettings, **kwargs: Any
-) -> Any:
-    try:
-        return await func(*args, **kwargs)
-    except ServiceUnavailableError as e:
-        raise OpenAIError(
-            e,
-            "OpenAI is experiencing issues. Visit "
-            "https://status.openai.com/ for more info.",
-            should_log=not settings.custom_api_key,
-        )
-    except InvalidRequestError as e:
-        if e.user_message.startswith("The model:"):
-            raise OpenAIError(
-                e,
-                f"Your API key does not have access to your current model. Please use a different model.",
-                should_log=not settings.custom_api_key,
-            )
-        raise OpenAIError(e, e.user_message)
-    except AuthenticationError as e:
-        raise OpenAIError(
-            e,
-            "Authentication error: Ensure a valid API key is being used.",
-            should_log=not settings.custom_api_key,
-        )
-    except RateLimitError as e:
-        if e.user_message.startswith("You exceeded your current quota"):
-            raise OpenAIError(
-                e,
-                f"Your API key exceeded your current quota, please check your plan and billing details.",
-                should_log=not settings.custom_api_key,
-            )
-        raise OpenAIError(e, e.user_message)
-    except Exception as e:
-        raise OpenAIError(
-            e, "There was an unexpected issue getting a response from the AI model."
-        )
-
-
 async def call_model_with_handling(
     model: BaseChatModel,
     prompt: BasePromptTemplate,
@@ -72,5 +29,74 @@ async def call_model_with_handling(
     settings: ModelSettings,
     **kwargs: Any,
 ) -> str:
-    chain = LLMChain(llm=model, prompt=prompt)
-    return await openai_error_handler(chain.arun, args, settings=settings, **kwargs)
+    """Execute a prompt and model using LCEL (LangChain Expression Language).
+
+    Retries on transient errors (rate limit, server unavailable) with
+    exponential backoff. Non-transient errors (auth, quota, model access)
+    fail fast.
+    """
+    chain: Runnable = prompt | model
+    max_retries = 3
+    last_exception: Exception = Exception()
+
+    for attempt in range(max_retries):
+        try:
+            result = await chain.ainvoke(args, **kwargs)
+            if hasattr(result, "content"):
+                return result.content
+            return str(result)
+        except Exception as e:
+            last_exception = e
+            error_msg = str(e)
+
+            # Non-retriable errors → fail fast
+            if "InsufficientQuota" in error_msg or "quota" in error_msg.lower():
+                raise OpenAIError(
+                    e,
+                    "Your API key exceeded your current quota, please check your plan and billing details.",
+                    should_log=not settings.custom_api_key,
+                )
+            if "Authentication" in error_msg or "401" in error_msg:
+                raise OpenAIError(
+                    e,
+                    "Authentication error: Ensure a valid API key is being used.",
+                    should_log=not settings.custom_api_key,
+                )
+            if "access_to_model" in error_msg or "model_not_found" in error_msg:
+                raise OpenAIError(
+                    e,
+                    "Your API key does not have access to your current model. Please use a different model.",
+                    should_log=not settings.custom_api_key,
+                )
+
+            # Transient errors → retry with backoff
+            is_transient = (
+                "ServiceUnavailable" in error_msg
+                or "503" in error_msg
+                or "RateLimit" in error_msg
+                or "429" in error_msg
+                or "timeout" in error_msg.lower()
+                or "server_error" in error_msg.lower()
+            )
+            if is_transient and attempt < max_retries - 1:
+                wait = 2 ** (attempt + 1)  # 2s, 4s, 8s
+                logger.warning(
+                    f"Transient OpenAI error (attempt {attempt + 1}/{max_retries}): "
+                    f"{error_msg[:120]}. Retrying in {wait}s..."
+                )
+                await asyncio.sleep(wait)
+                continue
+
+            # Last attempt or non-retriable → surface error
+            if is_transient:
+                raise OpenAIError(
+                    e,
+                    "OpenAI is temporarily unavailable. Please try again later.",
+                )
+            raise OpenAIError(
+                e,
+                "There was an unexpected issue getting a response from the AI model.",
+            )
+
+    # Shouldn't reach here, but just in case
+    raise OpenAIError(last_exception, "Failed to get a response after all retries.")

@@ -1,12 +1,10 @@
-from typing import List, Optional
+from typing import Any, AsyncGenerator, List, Optional
 
 from fastapi.responses import StreamingResponse as FastAPIStreamingResponse
-from lanarky.responses import StreamingResponse
-from langchain import LLMChain
-from langchain.callbacks.base import AsyncCallbackHandler
-from langchain.output_parsers import PydanticOutputParser
-from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate
-from langchain.schema import HumanMessage
+from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.output_parsers import PydanticOutputParser
+from langchain_core.prompts import ChatPromptTemplate, SystemMessagePromptTemplate
+from langchain_core.runnables import Runnable
 from loguru import logger
 from pydantic import ValidationError
 
@@ -18,7 +16,6 @@ from reworkd_platform.web.api.agent.agent_service.agent_service import AgentServ
 from reworkd_platform.web.api.agent.analysis import Analysis, AnalysisArguments
 from reworkd_platform.web.api.agent.helpers import (
     call_model_with_handling,
-    openai_error_handler,
     parse_with_handling,
 )
 from reworkd_platform.web.api.agent.model_factory import WrappedChatOpenAI
@@ -40,13 +37,25 @@ from reworkd_platform.web.api.agent.tools.utils import summarize
 from reworkd_platform.web.api.errors import OpenAIError
 
 
+async def _stream_lcel(
+    chain: Runnable,
+    inputs: dict[str, Any],
+) -> AsyncGenerator[str, None]:
+    """Stream LCEL chain output as text chunks."""
+    async for chunk in chain.astream(inputs):
+        if isinstance(chunk, str):
+            yield chunk
+        elif hasattr(chunk, "content") and chunk.content:
+            yield chunk.content
+
+
 class OpenAIAgentService(AgentService):
     def __init__(
         self,
         model: WrappedChatOpenAI,
         settings: ModelSettings,
         token_service: TokenService,
-        callbacks: Optional[List[AsyncCallbackHandler]],
+        callbacks: Optional[List[Any]],
         user: UserBase,
         oauth_crud: OAuthCrud,
     ):
@@ -102,25 +111,26 @@ class OpenAIAgentService(AgentService):
             str(functions),
         )
 
-        message = await openai_error_handler(
-            func=self.model.apredict_messages,
-            messages=prompt.to_messages(),
-            functions=functions,
-            settings=self.settings,
-            callbacks=self.callbacks,
-        )
-
-        function_call = message.additional_kwargs.get("function_call", {})
-        completion = function_call.get("arguments", "")
-
         try:
-            pydantic_parser = PydanticOutputParser(pydantic_object=AnalysisArguments)
-            analysis_arguments = parse_with_handling(pydantic_parser, completion)
-            return Analysis(
-                action=function_call.get("name", get_tool_name(get_default_tool())),
-                **analysis_arguments.dict(),
+            response = await self.model.ainvoke(
+                prompt.to_messages(),
+                functions=functions,
             )
-        except (OpenAIError, ValidationError):
+
+            function_call = response.additional_kwargs.get("function_call", {})
+            completion = function_call.get("arguments", "")
+
+            try:
+                pydantic_parser = PydanticOutputParser(pydantic_object=AnalysisArguments)
+                analysis_arguments = parse_with_handling(pydantic_parser, completion)
+                return Analysis(
+                    action=function_call.get("name", get_tool_name(get_default_tool())),
+                    **analysis_arguments.model_dump(),
+                )
+            except (OpenAIError, ValidationError):
+                return Analysis.get_default_analysis(task)
+        except Exception as e:
+            logger.error(f"Error analyzing task: {e}")
             return Analysis.get_default_analysis(task)
 
     async def execute_task_agent(
@@ -129,7 +139,7 @@ class OpenAIAgentService(AgentService):
         goal: str,
         task: str,
         analysis: Analysis,
-    ) -> StreamingResponse:
+    ) -> FastAPIStreamingResponse:
         # TODO: More mature way of calculating max_tokens
         if self.model.max_tokens > 3000:
             self.model.max_tokens = max(self.model.max_tokens - 1000, 3000)
@@ -181,10 +191,10 @@ class OpenAIAgentService(AgentService):
         goal: str,
         results: List[str],
     ) -> FastAPIStreamingResponse:
-        self.model.model_name = "gpt-3.5-turbo-16k"
-        self.model.max_tokens = 8000  # Total tokens = prompt tokens + completion tokens
+        self.model.model_name = "gpt-4o-mini"
+        self.model.max_tokens = 16000
 
-        snippet_max_tokens = 7000  # Leave room for the rest of the prompt
+        snippet_max_tokens = 14000
         text_tokens = self.token_service.tokenize("".join(results))
         text = self.token_service.detokenize(text_tokens[0:snippet_max_tokens])
         logger.info(f"Summarizing text: {text}")
@@ -218,10 +228,16 @@ class OpenAIAgentService(AgentService):
             ).to_string(),
         )
 
-        chain = LLMChain(llm=self.model, prompt=prompt)
+        chain: Runnable = prompt | self.model
 
-        return StreamingResponse.from_chain(
-            chain,
-            {"language": self.settings.language},
+        async def generate() -> AsyncGenerator[str, None]:
+            async for chunk in chain.astream({"language": self.settings.language}):
+                if isinstance(chunk, str):
+                    yield chunk
+                elif hasattr(chunk, "content") and chunk.content:
+                    yield chunk.content
+
+        return FastAPIStreamingResponse(
+            generate(),
             media_type="text/event-stream",
         )

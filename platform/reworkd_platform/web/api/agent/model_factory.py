@@ -1,7 +1,7 @@
 from typing import Any, Dict, Optional, Tuple, Type, Union
 
-from langchain.chat_models import AzureChatOpenAI, ChatOpenAI
-from pydantic import Field
+from langchain_openai import AzureChatOpenAI, ChatOpenAI
+from pydantic import BaseModel, Field
 
 from reworkd_platform.schemas.agent import LLM_Model, ModelSettings
 from reworkd_platform.schemas.user import UserBase
@@ -9,12 +9,10 @@ from reworkd_platform.settings import Settings
 
 
 class WrappedChatOpenAI(ChatOpenAI):
-    client: Any = Field(
-        default=None,
-        description="Meta private value but mypy will complain its missing",
-    )
-    max_tokens: int
-    model_name: LLM_Model = Field(alias="model")
+    """Wrapped ChatOpenAI with explicit field declarations for type safety."""
+
+    max_tokens: int = Field(default=500)
+    model_name: LLM_Model = Field(default="gpt-3.5-turbo", alias="model")
 
 
 class WrappedAzureChatOpenAI(AzureChatOpenAI, WrappedChatOpenAI):
@@ -38,7 +36,7 @@ def create_model(
     )
 
     llm_model = force_model or model_settings.model
-    model: Type[WrappedChat] = WrappedChatOpenAI
+    model_class: Type[WrappedChat] = WrappedChatOpenAI
     base, headers, use_helicone = get_base_and_headers(settings, model_settings, user)
     kwargs = {
         "openai_api_base": base,
@@ -52,7 +50,7 @@ def create_model(
     }
 
     if use_azure:
-        model = WrappedAzureChatOpenAI
+        model_class = WrappedAzureChatOpenAI
         deployment_name = llm_model.replace(".", "")
         kwargs.update(
             {
@@ -66,7 +64,7 @@ def create_model(
         if use_helicone:
             kwargs["model"] = deployment_name
 
-    return model(**kwargs)  # type: ignore
+    return model_class(**kwargs)
 
 
 def get_base_and_headers(

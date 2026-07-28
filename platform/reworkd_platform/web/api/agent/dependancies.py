@@ -42,7 +42,7 @@ async def agent_start_validator(
     crud: AgentCRUD = Depends(agent_crud),
 ) -> AgentRun:
     id_ = (await crud.create_run(body.goal)).id
-    return AgentRun(**body.dict(), run_id=str(id_))
+    return AgentRun(**body.model_dump(), run_id=str(id_))
 
 
 async def validate(body: T, crud: AgentCRUD, type_: Loop_Step) -> T:

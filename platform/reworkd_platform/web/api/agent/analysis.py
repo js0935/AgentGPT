@@ -1,6 +1,6 @@
-from typing import Dict
+from typing import Any
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 
 class AnalysisArguments(BaseModel):
@@ -15,7 +15,8 @@ class AnalysisArguments(BaseModel):
 class Analysis(AnalysisArguments):
     action: str
 
-    @validator("action")
+    @field_validator("action")
+    @classmethod
     def action_must_be_valid_tool(cls, v: str) -> str:
         # TODO: Remove circular import
         from reworkd_platform.web.api.agent.tools.tools import get_available_tools_names
@@ -24,12 +25,13 @@ class Analysis(AnalysisArguments):
             raise ValueError(f"Analysis action '{v}' is not a valid tool")
         return v
 
-    @validator("action")
-    def search_action_must_have_arg(cls, v: str, values: Dict[str, str]) -> str:
+    @field_validator("action")
+    @classmethod
+    def search_action_must_have_arg(cls, v: str, info: Any) -> str:
         from reworkd_platform.web.api.agent.tools.search import Search
         from reworkd_platform.web.api.agent.tools.tools import get_tool_name
 
-        if v == get_tool_name(Search) and not values["arg"]:
+        if v == get_tool_name(Search) and not info.data.get("arg"):
             raise ValueError("Analysis arg cannot be empty if action is 'search'")
         return v
 

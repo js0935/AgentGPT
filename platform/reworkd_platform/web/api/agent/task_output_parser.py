@@ -2,7 +2,7 @@ import ast
 import re
 from typing import List
 
-from langchain.schema import BaseOutputParser, OutputParserException
+from langchain_core.output_parsers import BaseOutputParser, OutputParserException
 
 
 class TaskOutputParser(BaseOutputParser[List[str]]):
