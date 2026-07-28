@@ -1,39 +1,26 @@
-# Use the official Node.js image as the base image
-FROM node:19-alpine
-
-ARG NODE_ENV
-
-ENV NODE_ENV=$NODE_ENV
-
-# Needed for the wait-for-db script
-RUN apk add --no-cache netcat-openbsd
-
-# Set the working directory
+# Stage 1: Install dependencies
+FROM node:20-alpine AS deps
 WORKDIR /next
 
-# Copy package.json and package-lock.json to the working directory
 COPY package*.json ./
+RUN npm ci --only=production
 
-# Install dependencies
-RUN npm ci
+# Stage 2: Production image
+FROM node:20-alpine AS runner
+ARG NODE_ENV=production
+ENV NODE_ENV=$NODE_ENV
 
-# Copy the wait-for-db.sh script
-COPY wait-for-db.sh /usr/local/bin/wait-for-db.sh
-RUN chmod +x /usr/local/bin/wait-for-db.sh
+WORKDIR /next
 
-# Copy the rest of the application code
+RUN apk add --no-cache netcat-openbsd dos2unix
+
+COPY --from=deps /next/node_modules ./node_modules
 COPY . .
 COPY entrypoint.sh /
 
-# Ensure correct line endings after these files are edited by windows
-RUN apk add --no-cache dos2unix netcat-openbsd \
-    && dos2unix /entrypoint.sh
+RUN dos2unix /entrypoint.sh
 
-
-# Expose the port the app will run on
 EXPOSE 3000
 
 ENTRYPOINT ["sh", "/entrypoint.sh"]
-
-# Start the application
 CMD ["npm", "run", "dev"]
