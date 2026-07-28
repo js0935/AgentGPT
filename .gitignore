@@ -32,7 +32,6 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # local env files
-# do not commit any .env files to git, except for the .env.example file. https://create.t3.gg/en/usage/env-variables#using-environment-variables
 .env*
 
 # vercel
@@ -46,10 +45,33 @@ yarn-error.log*
 # extracted language files
 /public/locales/$LOCALES
 
-.eslintcache
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+*.egg
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
 
 # Sentry Auth Token
 .sentryclirc
-/volumes/
+volumes/
 schema.prismae
 *.sql
+
+.eslintcache
