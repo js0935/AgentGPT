@@ -1,3 +1,5 @@
+"""OpenAI Agent 服務實作 — 透過 LangChain 串接 OpenAI API 執行 agent 工作流程。"""
+
 from typing import Any, AsyncGenerator, List, Optional
 
 from fastapi.responses import StreamingResponse as FastAPIStreamingResponse

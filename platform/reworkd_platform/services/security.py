@@ -1,3 +1,5 @@
+"""加密服務 — 使用 Fernet 提供敏感資料的加密與解密功能。"""
+
 from typing import Union
 
 from cryptography.fernet import Fernet, InvalidToken

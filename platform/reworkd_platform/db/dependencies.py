@@ -1,3 +1,5 @@
+"""資料庫連線依賴注入 — 提供 FastAPI 請求層級的資料庫連線管理。"""
+
 from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncSession

@@ -1,3 +1,5 @@
+"""SQLAlchemy 模型基底類別 — 提供所有資料表模型的共用欄位與方法。"""
+
 import uuid
 from datetime import datetime
 from typing import Optional, Type, TypeVar

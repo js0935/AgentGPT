@@ -1,3 +1,5 @@
+"""認證與 OAuth API 路由 — 處理 OAuth 安裝、回呼及組織查詢。"""
+
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException

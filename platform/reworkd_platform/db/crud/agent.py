@@ -1,3 +1,5 @@
+"""Agent CRUD 操作 — 管理 agent 執行紀錄與任務的資料庫操作。"""
+
 from fastapi import HTTPException
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession

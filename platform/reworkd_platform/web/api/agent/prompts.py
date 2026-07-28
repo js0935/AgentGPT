@@ -1,3 +1,5 @@
+"""Agent 提示詞模板庫 — 定義各種 LLM 任務的 PromptTemplate。"""
+
 from langchain_core.prompts import PromptTemplate
 
 # Create initial tasks using plan and solve prompting

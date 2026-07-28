@@ -1,3 +1,5 @@
+"""應用程式生命週期管理 — 註冊 FastAPI 啟動與關閉事件。"""
+
 from typing import Awaitable, Callable
 
 from fastapi import FastAPI

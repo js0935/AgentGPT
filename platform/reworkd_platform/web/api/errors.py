@@ -1,3 +1,5 @@
+"""自訂例外類別 — 定義平台統一的錯誤處理階層。"""
+
 class PlatformaticError(Exception):
     """
     Parent exception class for all expected backend exceptions

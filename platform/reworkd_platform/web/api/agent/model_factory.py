@@ -1,3 +1,5 @@
+"""LLM 模型工廠 — 根據設定建立 OpenAI / Azure OpenAI 聊天模型實例。"""
+
 from typing import Any, Dict, Optional, Tuple, Type, Union
 
 from langchain_openai import AzureChatOpenAI, ChatOpenAI

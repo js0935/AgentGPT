@@ -1,3 +1,5 @@
+"""Agent 工具基底類別 — 定義所有工具類別的抽象介面。"""
+
 from abc import ABC, abstractmethod
 from typing import Optional
 

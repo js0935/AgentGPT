@@ -1,3 +1,5 @@
+"""Agent 路由依賴注入 — 驗證請求資料並注入 CRUD 實例。"""
+
 from typing import TypeVar
 
 from fastapi import Body, Depends

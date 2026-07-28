@@ -1,3 +1,5 @@
+"""日誌設定 — 整合標準 logging 與 loguru，統一日誌輸出格式。"""
+
 import logging
 import sys
 from typing import Union

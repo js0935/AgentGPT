@@ -1,3 +1,5 @@
+"""使用者 CRUD 操作 — 管理使用者 session 與組織關係的資料庫操作。"""
+
 from typing import Optional
 
 from sqlalchemy import and_, select

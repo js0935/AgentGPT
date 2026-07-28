@@ -1,3 +1,5 @@
+"""全域錯誤處理介接程式 — 將自訂例外轉換為標準化 JSON 回應。"""
+
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from loguru import logger

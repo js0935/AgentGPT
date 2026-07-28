@@ -1,3 +1,5 @@
+"""API 依賴注入 — 提供使用者認證與權限驗證的共用依賴。"""
+
 from datetime import datetime
 from typing import Annotated
 

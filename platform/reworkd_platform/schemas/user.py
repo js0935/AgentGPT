@@ -1,3 +1,5 @@
+"""使用者資料模型 — 定義使用者基礎資訊與組織角色的 Pydantic 結構。"""
+
 from typing import Optional
 
 from pydantic import BaseModel, Field

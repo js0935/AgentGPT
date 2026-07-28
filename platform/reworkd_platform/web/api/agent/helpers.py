@@ -1,3 +1,5 @@
+"""AI 模型呼叫輔助函式 — 封裝 LangChain 模型呼叫與錯誤處理邏輯。"""
+
 import asyncio
 from typing import Any, Dict, TypeVar
 

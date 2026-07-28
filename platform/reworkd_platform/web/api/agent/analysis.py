@@ -1,3 +1,5 @@
+"""Agent 任務分析模型 — 定義 LLM 工具選擇與參數的結構化輸出格式。"""
+
 from typing import Any
 
 from pydantic import BaseModel, field_validator

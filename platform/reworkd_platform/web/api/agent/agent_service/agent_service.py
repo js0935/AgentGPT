@@ -1,3 +1,5 @@
+"""Agent 服務協定 — 定義 agent 工作流程的抽象介面。"""
+
 from typing import List, Optional, Protocol
 
 from fastapi.responses import StreamingResponse as FastAPIStreamingResponse

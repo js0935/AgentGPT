@@ -1,3 +1,5 @@
+"""工具註冊與查找 — 管理所有可用工具的註冊、名稱解析與權限檢查。"""
+
 from typing import List, Type
 
 from reworkd_platform.db.crud.oauth import OAuthCrud

@@ -1,3 +1,5 @@
+"""任務輸出解析器 — 將 LLM 回傳的任務列表字串解析為結構化資料。"""
+
 import ast
 import re
 from typing import List

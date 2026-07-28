@@ -1,3 +1,5 @@
+"""Agent 資料模型 — 定義 agent 執行、任務分析、模型設定等 Pydantic 結構。"""
+
 from datetime import datetime
 from typing import Any, Dict, List, Literal, Optional
 
