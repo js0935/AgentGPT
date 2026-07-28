@@ -45,8 +45,7 @@ async function generateAgentName(goal: string) {
       model: "gpt-3.5-turbo",
     });
 
-    // @ts-ignore
-    return chatCompletion.choices[0].message.content as string;
+    return chatCompletion.choices[0]?.message?.content ?? undefined;
   } catch (e) {
     console.error(e);
     return undefined;

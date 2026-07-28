@@ -1,4 +1,4 @@
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import type { Session } from "next-auth";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useEffect } from "react";
