@@ -6,7 +6,7 @@ on:
       - 'platform/**'
 
 env:
-  PYTHON_VERSION: "3.11"
+  PYTHON_VERSION: "3.12"
 
 jobs:
   black:
@@ -15,10 +15,10 @@ jobs:
       run:
         working-directory: platform
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install poetry
         run: pipx install poetry
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'poetry'
@@ -32,10 +32,10 @@ jobs:
       run:
         working-directory: platform
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install poetry
         run: pipx install poetry
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'poetry'
@@ -64,10 +64,10 @@ jobs:
         ports:
           - 3306:3306
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install poetry
         run: pipx install poetry
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'poetry'
@@ -77,4 +77,3 @@ jobs:
         env:
           REWORKD_PLATFORM_HOST: "0.0.0.0"
           REWORKD_PLATFORM_DB_HOST: localhost
-          REWORKD_PLATFORM_KAFKA_BOOTSTRAP_SERVERS: '["localhost:9092"]'
