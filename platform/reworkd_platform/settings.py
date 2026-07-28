@@ -1,7 +1,6 @@
-import platform
 from pathlib import Path
 from tempfile import gettempdir
-from typing import List, Literal, Optional, Union
+from typing import Literal, Optional
 
 from pydantic import BaseSettings
 from yarl import URL
@@ -17,12 +16,6 @@ LOG_LEVEL = Literal[
     "WARNING",
     "ERROR",
     "FATAL",
-]
-
-
-SASL_MECHANISM = Literal[
-    "PLAIN",
-    "SCRAM-SHA-256",
 ]
 
 ENVIRONMENT = Literal[
@@ -86,17 +79,6 @@ class Settings(BaseSettings):
     sentry_dsn: Optional[str] = None
     sentry_sample_rate: float = 1.0
 
-    kafka_bootstrap_servers: Union[str, List[str]] = []
-    kafka_username: Optional[str] = None
-    kafka_password: Optional[str] = None
-    kafka_ssal_mechanism: SASL_MECHANISM = "PLAIN"
-
-    # Websocket settings
-    pusher_app_id: Optional[str] = None
-    pusher_key: Optional[str] = None
-    pusher_secret: Optional[str] = None
-    pusher_cluster: Optional[str] = None
-
     # Application Settings
     ff_mock_mode_enabled: bool = False  # Controls whether calls are mocked
     max_loops: int = 25  # Maximum number of loops to run
@@ -107,18 +89,6 @@ class Settings(BaseSettings):
     sid_redirect_uri: Optional[str] = None
 
     @property
-    def kafka_consumer_group(self) -> str:
-        """
-        Kafka consumer group will be the name of the host in development
-        mode, making it easier to share a dev cluster.
-        """
-
-        if self.environment == "development":
-            return platform.node()
-
-        return "platform"
-
-    @property
     def db_url(self) -> URL:
         return URL.build(
             scheme="mysql+aiomysql",
@@ -127,27 +97,6 @@ class Settings(BaseSettings):
             user=self.db_user,
             password=self.db_pass,
             path=f"/{self.db_base}",
-        )
-
-    @property
-    def pusher_enabled(self) -> bool:
-        return all(
-            [
-                self.pusher_app_id,
-                self.pusher_key,
-                self.pusher_secret,
-                self.pusher_cluster,
-            ]
-        )
-
-    @property
-    def kafka_enabled(self) -> bool:
-        return all(
-            [
-                self.kafka_bootstrap_servers,
-                self.kafka_username,
-                self.kafka_password,
-            ]
         )
 
     @property
