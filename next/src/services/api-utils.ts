@@ -14,30 +14,6 @@ export const post = async <T>(url: string, body: unknown, session?: Session) => 
   ).data as T;
 };
 
-export const get = async <T>(url: string, session?: Session) => {
-  const headers = getHeaders(session);
-  url = getUrl(url);
-
-  return (
-    await axios.get(url, {
-      headers,
-    })
-  ).data as T;
-};
-
-export const delete_ = async <T>(url: string, accessToken?: string) => {
-  const headers: Record<string, string> = {};
-  if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
-
-  url = getUrl(url);
-
-  return (
-    await axios.delete(url, {
-      headers,
-    })
-  ).data as T;
-};
-
 export function getHeaders(session?: Session) {
   const headers: Record<string, string> = {};
   if (session?.accessToken) {
