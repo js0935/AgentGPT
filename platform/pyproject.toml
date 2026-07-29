@@ -16,7 +16,6 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.12"
 fastapi = "^0.115.0"
-boto3 = "^1.35.0"
 uvicorn = { version = "^0.32.0", extras = ["standard"] }
 pydantic = { version = "^2.10", extras = ["dotenv"] }
 sqlalchemy = { version = "^2.0.36", extras = ["mypy", "asyncio"] }
@@ -35,7 +34,6 @@ replicate = "^0.30.0"
 tiktoken = "^0.8.0"
 pinecone-client = "^5.0.0"
 python-multipart = "^0.0.12"
-botocore = "^1.35.0"
 cryptography = "^44.0.0"
 httpx = "^0.28.0"
 aiohttp = "^3.10.0"
