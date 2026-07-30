@@ -4,7 +4,8 @@ import asyncio
 from typing import Any, Dict, TypeVar
 
 from langchain_core.language_models import BaseChatModel
-from langchain_core.output_parsers import BaseOutputParser, OutputParserException
+from langchain_core.exceptions import OutputParserException
+from langchain_core.output_parsers import BaseOutputParser
 from langchain_core.prompts import BasePromptTemplate
 from langchain_core.runnables import Runnable
 from loguru import logger

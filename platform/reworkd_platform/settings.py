@@ -14,7 +14,7 @@ from pathlib import Path
 from tempfile import gettempdir
 from typing import Literal, Optional
 
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 from yarl import URL
 
 from reworkd_platform.constants import ENV_PREFIX

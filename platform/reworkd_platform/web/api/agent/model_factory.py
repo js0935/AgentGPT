@@ -14,7 +14,7 @@ class WrappedChatOpenAI(ChatOpenAI):
     """Wrapped ChatOpenAI with explicit field declarations for type safety."""
 
     max_tokens: int = Field(default=500)
-    model_name: LLM_Model = Field(default="gpt-3.5-turbo", alias="model")
+    model_name: LLM_Model = Field(default="meta/llama-3.1-8b-instruct", alias="model")
 
 
 class WrappedAzureChatOpenAI(AzureChatOpenAI, WrappedChatOpenAI):
@@ -40,6 +40,10 @@ def create_model(
     llm_model = force_model or model_settings.model
     model_class: Type[WrappedChat] = WrappedChatOpenAI
     base, headers, use_helicone = get_base_and_headers(settings, model_settings, user)
+    model_kwargs: Dict[str, Any] = {"user": user.email}
+    if headers is not None:
+        model_kwargs["headers"] = headers
+
     kwargs = {
         "openai_api_base": base,
         "openai_api_key": model_settings.custom_api_key or settings.openai_api_key,
@@ -48,7 +52,7 @@ def create_model(
         "max_tokens": model_settings.max_tokens,
         "streaming": streaming,
         "max_retries": 5,
-        "model_kwargs": {"user": user.email, "headers": headers},
+        "model_kwargs": model_kwargs,
     }
 
     if use_azure:

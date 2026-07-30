@@ -8,12 +8,10 @@ from pydantic import BaseModel, Field, field_validator
 from reworkd_platform.web.api.agent.analysis import Analysis
 
 LLM_Model = Literal[
-    "gpt-3.5-turbo",
-    "gpt-3.5-turbo-16k",
-    "gpt-4",
-    "gpt-4-turbo",
-    "gpt-4o",
-    "gpt-4o-mini",
+    "meta/llama-3.1-8b-instruct",
+    "meta/llama-3.1-70b-instruct",
+    "mistralai/mistral-nemotron",
+    "nvidia/nemotron-mini-4b-instruct",
 ]
 Loop_Step = Literal[
     "start",
@@ -24,17 +22,15 @@ Loop_Step = Literal[
     "chat",
 ]
 LLM_MODEL_MAX_TOKENS: Dict[LLM_Model, int] = {
-    "gpt-3.5-turbo": 16385,
-    "gpt-3.5-turbo-16k": 16385,
-    "gpt-4": 8192,
-    "gpt-4-turbo": 128000,
-    "gpt-4o": 128000,
-    "gpt-4o-mini": 128000,
+    "meta/llama-3.1-8b-instruct": 128000,
+    "meta/llama-3.1-70b-instruct": 128000,
+    "mistralai/mistral-nemotron": 128000,
+    "nvidia/nemotron-mini-4b-instruct": 4096,
 }
 
 
 class ModelSettings(BaseModel):
-    model: LLM_Model = Field(default="gpt-3.5-turbo")
+    model: LLM_Model = Field(default="meta/llama-3.1-8b-instruct")
     custom_api_key: Optional[str] = Field(default=None)
     temperature: float = Field(default=0.9, ge=0.0, le=1.0)
     max_tokens: int = Field(default=500, ge=0)

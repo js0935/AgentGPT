@@ -37,7 +37,7 @@ async def agent_start_validator(
         example={
             "goal": "Create business plan for a bagel company",
             "modelSettings": {
-                "customModelName": "gpt-3.5-turbo",
+                "customModelName": "meta/llama-3.1-8b-instruct",
             },
         },
     ),
