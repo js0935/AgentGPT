@@ -1,0 +1,13 @@
+{
+  "ERROR_ACCESSING_OPENAI_API_KEY": "連線後端時發生錯誤。請檢查 API 金鑰，或稍後再試。",
+  "ERROR_ADDING_ADDITIONAL_TASKS": "新增額外任務時發生錯誤。可能是因為我們的模型政策無法處理這些任務。繼續執行...",
+  "RATE_LIMIT_EXCEEDED": "已達到速率限制！請慢一點...😅",
+  "AGENT_MAXED_OUT_LOOPS": "此代理人已達到迴圈次數上限。為了保護您的錢包，此代理人即將停止。您可以在進階設定中調整迴圈次數上限。",
+  "DEMO_LOOPS_REACHED": "代理人已達到迴圈次數上限。如需更多迴圈次數，請在設定中調整。即將停止...",
+  "AGENT_MANUALLY_SHUT_DOWN": "代理人已手動關閉。",
+  "ALL_TASKS_COMPLETETD": "所有任務已完成。即將停止。",
+  "ERROR_API_KEY_QUOTA": "使用 OpenAI API 金鑰時發生錯誤。您已超出目前配額，請檢查您的方案與帳單資訊。",
+  "ERROR_OPENAI_API_KEY_NO_GPT4": "錯誤：您的 API 金鑰沒有 GPT-4 存取權限。您必須先加入 OpenAI 的候補名單。（這與 ChatGPT Plus 不同）",
+  "ERROR_RETRIEVE_INITIAL_TASKS": "擷取初始任務時發生錯誤。請重試、將目標描述得更清楚，或調整目標使其符合模型政策。即將停止...",
+  "INVALID_OPENAI_API_KEY": "錯誤：OpenAI API 金鑰無效"
+}

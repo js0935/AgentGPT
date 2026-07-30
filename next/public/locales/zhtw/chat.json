@@ -1,0 +1,17 @@
+{
+	"COMPLETING": "完成：",
+	"CONSIDER_SPONSORING_ON_GITHUB": "請考慮在 GitHub 上贊助本專案。",
+	"CONSOLE_TEXT_COPIED_TO_CLIPBOARD": "文字已複製到剪貼簿",
+	"CONSOLE_UNABLE_TO_COPY_TO_CLIPBOARD": "無法將文字複製到剪貼簿",
+	"CREATE_AN_AGENT_DESCRIPTION": "👉 新增名稱／目標，然後點擊「部署」來建立代理人！試試底下的範例吧！",
+	"EMBARKING_ON_NEW_GOAL": "開始新目標：",
+	"EXPERIENCING_EXCEPTIONAL_TRAFFIC": "🚨 我們目前流量異常龐大，如果您未使用自己的 API 金鑰，可能會遇到延遲或錯誤 🚨",
+	"HELP_SUPPORT_THE_ADVANCEMENT_OF_AGENTGPT": "💝️ 幫助 AgentGPT 持續進步。 💝️",
+	"NO_MORE_TASKS": "沒有更多子任務可執行：",
+	"RESTART_IF_IT_TAKES_X_SEC": "（如果超過 30 秒請重整頁面或手動重新啟動代理人）",
+	"SUPPORT_NOW": "立即贊助 🚀",
+	"TASK_ADDED": "已新增任務：",
+	"THINKING": "思考中...",
+	"YOU_CAN_PROVIDE_YOUR_API_KEY": "📢 您可以在設定分頁中提供自己的 OpenAI API 金鑰以獲得更高的用量限制！",
+	"👉 Create an agent by adding a name / goal, and hitting deploy!": "👉 新增名稱／目標，然後點擊部署來建立代理人！"
+}
