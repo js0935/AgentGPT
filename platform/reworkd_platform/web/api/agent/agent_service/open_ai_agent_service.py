@@ -35,6 +35,7 @@ from reworkd_platform.web.api.agent.tools.tools import (
     get_tool_name,
     get_user_tools,
 )
+from reworkd_platform.web.api.agent.tools.duckduck_search import web_search_simple
 from reworkd_platform.web.api.agent.tools.utils import summarize
 from reworkd_platform.web.api.errors import OpenAIError
 
@@ -193,7 +194,7 @@ class OpenAIAgentService(AgentService):
         goal: str,
         results: List[str],
     ) -> FastAPIStreamingResponse:
-        self.model.model_name = "gpt-4o-mini"
+        self.model.model_name = "meta/llama-3.1-8b-instruct"
         self.model.max_tokens = 16000
 
         snippet_max_tokens = 14000
@@ -214,14 +215,30 @@ class OpenAIAgentService(AgentService):
         message: str,
         results: List[str],
     ) -> FastAPIStreamingResponse:
-        self.model.model_name = "gpt-3.5-turbo-16k"
-        prompt = ChatPromptTemplate.from_messages(
-            [
-                SystemMessagePromptTemplate(prompt=chat_prompt),
-                *[HumanMessage(content=result) for result in results],
-                HumanMessage(content=message),
-            ]
+        self.model.model_name = "meta/llama-3.1-8b-instruct"
+
+        # 自動搜尋即時資訊
+        search_context = ""
+        try:
+            search_result = await web_search_simple(message, max_results=5)
+            if search_result:
+                search_context = (
+                    f"以下為從網路搜尋取得的最新資訊（搜尋關鍵字：{message}）：\n"
+                    f"{search_result}\n\n"
+                    "請優先使用以上資訊回答。如果搜尋結果與問題無關，請忽略它們。"
+                )
+        except Exception:
+            logger.warning("Web search failed in chat, continuing without search results")
+
+        messages = [SystemMessagePromptTemplate(prompt=chat_prompt)]
+        if search_context:
+            messages.append(SystemMessage(content=search_context))
+        messages.extend(
+            HumanMessage(content=result) for result in results
         )
+        messages.append(HumanMessage(content=message))
+
+        prompt = ChatPromptTemplate.from_messages(messages)
 
         self.token_service.calculate_max_tokens(
             self.model,

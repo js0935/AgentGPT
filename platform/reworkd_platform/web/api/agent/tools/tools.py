@@ -5,6 +5,7 @@ from typing import List, Type
 from reworkd_platform.db.crud.oauth import OAuthCrud
 from reworkd_platform.schemas.user import UserBase
 from reworkd_platform.web.api.agent.tools.code import Code
+from reworkd_platform.web.api.agent.tools.duckduck_search import DuckDuckSearch
 from reworkd_platform.web.api.agent.tools.image import Image
 from reworkd_platform.web.api.agent.tools.search import Search
 from reworkd_platform.web.api.agent.tools.sidsearch import SID
@@ -19,7 +20,7 @@ async def get_user_tools(
 
 
 def get_available_tools() -> List[Type[Tool]]:
-    return get_external_tools() + get_default_tools()
+    return get_external_tools() + get_default_tools() + [DuckDuckSearch]
 
 
 def get_available_tools_names() -> List[str]:
@@ -37,7 +38,8 @@ def get_external_tools() -> List[Type[Tool]]:
 
 def get_default_tools() -> List[Type[Tool]]:
     return [
-        Search,
+        DuckDuckSearch,  # 免 API key 的 DuckDuckGo 搜尋
+        Search,  # serper.dev 搜尋（需 API key，保留作為備用）
     ]
 
 
