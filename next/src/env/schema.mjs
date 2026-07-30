@@ -26,6 +26,7 @@ export const serverSchema = z.object({
         process.env.VERCEL ? z.string() : z.string().url()
     ),
     OPENAI_API_KEY: z.string().min(1).trim().optional(),
+    OPENAI_API_BASE: z.string().default("https://integrate.api.nvidia.com/v1"),
 
     GOOGLE_CLIENT_ID: z.string().min(1).trim().optional(),
     GOOGLE_CLIENT_SECRET: z.string().min(1).trim().optional(),
@@ -46,6 +47,7 @@ export const serverEnv = {
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    OPENAI_API_BASE: process.env.OPENAI_API_BASE,
 
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
@@ -66,8 +68,8 @@ export const clientSchema = z.object({
     NEXT_PUBLIC_VERCEL_ENV: z.enum(["production", "preview", "development", "test"]).default("development"),
     NEXT_PUBLIC_FF_MOCK_MODE_ENABLED: stringToBoolean().default(false),
     NEXT_PUBLIC_FF_SID_ENABLED: stringToBoolean().default(false),
-    NEXT_PUBLIC_VERCEL_URL: z.string().default("http://localhost:3000"),
-    NEXT_PUBLIC_BACKEND_URL: z.string().url().default("http://localhost:8000"),
+    NEXT_PUBLIC_VERCEL_URL: z.string().default("http://localhost:3001"),
+    NEXT_PUBLIC_BACKEND_URL: z.string().url().default("http://localhost:3000"),
     NEXT_PUBLIC_MAX_LOOPS: z.coerce.number().default(25),
 });
 
