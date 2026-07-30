@@ -1,7 +1,7 @@
 import { Disclosure } from "@headlessui/react";
 import clsx from "clsx";
 import Image from "next/image";
-import { useRouter } from "next/router";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { FaBars, FaChevronRight, FaTimes } from "react-icons/fa";
 
@@ -28,9 +28,9 @@ const navigation = [
 ];
 
 export default function NavBar() {
-  const router = useRouter();
+  const pathname = usePathname();
   const currentIndex = navigation.findIndex(
-    (nav) => router.pathname.includes(nav.href) || router.pathname === nav.href
+    (nav) => pathname.includes(nav.href) || pathname === nav.href
   );
   const [hoveredButtonIndex, setHoveredButtonIndex] = useState(0);
 

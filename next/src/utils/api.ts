@@ -12,7 +12,7 @@ export const api = createTRPCReact<AppRouter>();
 const getBaseUrl = () => {
   if (typeof window !== "undefined") return ""; // browser should use relative url
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return `http://localhost:${process.env.PORT ?? 3000}`;
+  return `http://localhost:3001`;  // frontend 跑在 port 3001
 };
 
 export const queryClient = new QueryClient({
@@ -25,10 +25,10 @@ export const queryClient = new QueryClient({
 });
 
 export const trpcClient = api.createClient({
+  transformer: superjson,
   links: [
     httpBatchLink({
       url: `${getBaseUrl()}/api/trpc`,
-      transformer: superjson,
     }),
   ],
 });

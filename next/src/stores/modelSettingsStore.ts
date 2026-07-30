@@ -38,14 +38,23 @@ export const useModelSettingsStore = createSelectors(
       }),
       {
         name: "agentgpt-settings-storage-v2",
+        version: 2,
         storage: createJSONStorage(() => localStorage),
         partialize: (state) => ({
           modelSettings: {
             ...state.modelSettings,
-            customModelName: "gpt-3.5-turbo",
+            customModelName: "meta/llama-3.1-8b-instruct",
             maxTokens: Math.min(state.modelSettings.maxTokens, 4000),
           },
         }),
+        migrate: (persistedState, version) => {
+          // 若版本不符（舊的 localStorage 有 gpt-3.5-turbo 等舊模型名稱），
+          // 直接回傳預設值，拋棄舊的存儲
+          if (version < 2) {
+            return initialModelSettingsState as ModelSettingsSlice;
+          }
+          return persistedState as ModelSettingsSlice;
+        },
       }
     )
   )

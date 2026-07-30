@@ -1,6 +1,6 @@
 import ReactPDF, { Document, Font, Page, StyleSheet, Text } from "@react-pdf/renderer";
-import { i18n } from "react-i18next";
 import React from "react";
+import i18n from "../../utils/i18n";
 
 import View = ReactPDF.View;
 

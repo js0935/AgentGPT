@@ -25,6 +25,7 @@ async function generateAgentName(goal: string) {
   try {
     const openAI = new OpenAI({
       apiKey: env.OPENAI_API_KEY as string,
+      baseURL: env.OPENAI_API_BASE,
     });
 
     const chatCompletion = await openAI.chat.completions.create({
@@ -35,14 +36,14 @@ async function generateAgentName(goal: string) {
         },
         {
           role: "system",
-          content: `Summarize this into one or two words followed by "GPT" and a single emoji.
+          content: `Summarize this into one or two words followed by a single emoji.
            Examples:
-           - 'I want to buy a house' becomes HouseGPT 🏠
-           - 'Analyze top stock prices and generate a report' becomes AnalyzeStockGPT 📈
+           - 'I want to buy a house' becomes House 🏠
+           - 'Analyze top stock prices and generate a report' becomes AnalyzeStock 📈
            `,
         },
       ],
-      model: "gpt-3.5-turbo",
+      model: "meta/llama-3.1-8b-instruct",
     });
 
     return chatCompletion.choices[0]?.message?.content ?? undefined;

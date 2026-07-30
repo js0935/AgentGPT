@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { useRouter } from "next/router";
+import { usePathname, useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { FaBars } from "react-icons/fa";
 
@@ -15,6 +15,7 @@ import { PAGE_LINKS, SOCIAL_LINKS } from "../sidebar/links";
 
 const LeftSidebar = ({ show, setShow, onReload }: DisplayProps & { onReload?: () => void }) => {
   const router = useRouter();
+  const pathname = usePathname();
   const { session, signIn, signOut, status } = useAuth();
   const [t] = useTranslation("drawer");
 
@@ -24,7 +25,7 @@ const LeftSidebar = ({ show, setShow, onReload }: DisplayProps & { onReload?: ()
   const userAgents = data ?? [];
 
   const navigateToPage = (href: string) => {
-    if (router.pathname === href) {
+    if (pathname === href) {
       onReload?.();
       return;
     }

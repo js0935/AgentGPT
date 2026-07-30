@@ -1,5 +1,4 @@
 import clsx from "clsx";
-import { useRouter } from "next/router";
 import type { Session } from "next-auth";
 import { useTranslation } from "react-i18next";
 import type { FC } from "react";
@@ -18,7 +17,6 @@ const AuthItem: FC<{
 }> = ({ session, classname, signOut, signIn }) => {
   const [t] = useTranslation("drawer");
   const [showDialog, setShowDialog] = useState(false);
-  const router = useRouter();
   const user = session?.user;
 
   const organization = user?.organizations?.at(0)?.name;
