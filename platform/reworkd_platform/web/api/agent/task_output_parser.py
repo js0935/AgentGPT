@@ -4,7 +4,8 @@ import ast
 import re
 from typing import List
 
-from langchain_core.output_parsers import BaseOutputParser, OutputParserException
+from langchain_core.exceptions import OutputParserException
+from langchain_core.output_parsers import BaseOutputParser
 
 
 class TaskOutputParser(BaseOutputParser[List[str]]):
