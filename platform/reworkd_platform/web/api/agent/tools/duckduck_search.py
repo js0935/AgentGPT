@@ -1,6 +1,7 @@
 """網頁搜尋與即時資料工具 — DuckDuckGo 搜尋 + 台灣證交所(TWSE)股市即時資料。"""
 
 import ssl
+import time
 from datetime import datetime
 from typing import Any, List
 from urllib.parse import quote
@@ -35,7 +36,12 @@ async def _duckduckgo_search_results(
 STOCK_MARKET_KEYWORDS = [
     "股市", "股票", "股價", "加權指數", "大盤", "指數", "收盤", "開盤",
     "盤勢", "漲跌", "台股", "證交所", "上市", "上櫃",
-    "台積電", "聯發科", "鴻海", "中華電", "0050", "2330", "2454", "2317",
+    "台積電", "聯發科", "鴻海", "中華電", "台達電", "聯電", "廣達", "緯創",
+    "大立光", "華碩", "長榮", "陽明", "富邦金", "國泰金", "中信金", "玉山金",
+    "中鋼", "台塑", "統一",
+    "0050", "0056", "006208", "00878", "00919", "00929", "00940", "00900", "00713",
+    "2330", "2454", "2317", "2308", "2303", "2382", "3231", "3008", "2357",
+    "2603", "2609", "2881", "2882", "2891", "2884", "2002", "1301", "6505", "1216",
     "stock", "market", "TAIEX", "TWII", "shares", "share price",
 ]
 
@@ -49,10 +55,30 @@ SYMBOL_ZH_NAMES = {
     "00878.TW": "國泰永續高股息",
     "00919.TW": "群益台灣精選高息",
     "00929.TW": "復華台灣科技優息",
+    "00940.TW": "元大台灣價值高息",
+    "00900.TW": "富邦特選高股息30",
+    "00713.TW": "元大台灣高息低波",
+    "00679B.TW": "元大美債20年",
     "2330.TW": "台積電",
     "2454.TW": "聯發科",
     "2317.TW": "鴻海",
     "2412.TW": "中華電",
+    "2308.TW": "台達電",
+    "2303.TW": "聯電",
+    "2382.TW": "廣達",
+    "3231.TW": "緯創",
+    "3008.TW": "大立光",
+    "2357.TW": "華碩",
+    "2603.TW": "長榮",
+    "2609.TW": "陽明",
+    "2881.TW": "富邦金",
+    "2882.TW": "國泰金",
+    "2891.TW": "中信金",
+    "2884.TW": "玉山金",
+    "2002.TW": "中鋼",
+    "1301.TW": "台塑",
+    "6505.TW": "台塑化",
+    "1216.TW": "統一",
 }
 
 
@@ -66,6 +92,10 @@ def is_stock_market_query(message: str) -> bool:
 
 # TWSE 官方即時報價的代號（tse_ = 上市；t00 = 加權指數）
 TWSE_INDEX_CODE = "tse_t00.tw"
+
+# 行情快取：短時間內重複查詢直接回傳，避免每次打 TWSE API（30 秒 TTL）
+_MARKET_CACHE: dict[str, tuple[float, str]] = {}
+_MARKET_CACHE_TTL = 30.0
 
 
 def _is_etf_query(query: str) -> bool:
@@ -135,6 +165,7 @@ async def _fetch_twse_quotes(
             symbol = _twse_code_to_yahoo_symbol(ex_ch)
             change = price - prev
             pct = change / prev * 100
+            arrow = "▲" if change > 0 else ("▼" if change < 0 else "—")
             date = item.get("d", "")
             tm = item.get("t", "")
             if len(date) == 8 and tm:
@@ -142,8 +173,8 @@ async def _fetch_twse_quotes(
             else:
                 time_str = "unknown"
             lines.append(
-                f"[{len(lines) + 1}] {name} ({symbol}): 現價 {price:.2f}, "
-                f"漲跌 {change:+.2f} ({pct:+.2f}%), 更新時間 {time_str}"
+                f"| {name} | {symbol} | {price:.2f} | {arrow} {change:+.2f} | "
+                f"{pct:+.2f}% | {time_str} |"
             )
     return lines
 
@@ -188,9 +219,10 @@ async def _fetch_yahoo_fallback(
                 ].get("shortName") or symbol
                 change = price - prev
                 pct = change / prev * 100
+                arrow = "▲" if change > 0 else ("▼" if change < 0 else "—")
                 lines.append(
-                    f"[{len(lines) + 1}] {name} ({symbol}): 現價 {price:.2f}, "
-                    f"漲跌 {change:+.2f} ({pct:+.2f}%), 更新時間 unknown"
+                    f"| {name} | {symbol} | {price:.2f} | {arrow} {change:+.2f} | "
+                    f"{pct:+.2f}% | unknown |"
                 )
         except Exception as e:
             logger.warning(f"Yahoo Finance {symbol} failed: {e}")
@@ -204,6 +236,12 @@ async def fetch_stock_market(query: str = "") -> str:
     TWSE 失敗時 fallback 到 Yahoo Finance 歷史日線。
     全部失敗時回傳空字串。
     """
+    cache_key = "etf" if _is_etf_query(query) else "stocks"
+    now = time.monotonic()
+    cached = _MARKET_CACHE.get(cache_key)
+    if cached and now - cached[0] < _MARKET_CACHE_TTL:
+        return cached[1]
+
     if _is_etf_query(query):
         ex_codes = [
             "tse_t00.tw",    # 台灣加權指數
@@ -213,15 +251,27 @@ async def fetch_stock_market(query: str = "") -> str:
             "tse_00878.tw",  # 國泰永續高股息 ETF
             "tse_00919.tw",  # 群益台灣精選高息 ETF
             "tse_00929.tw",  # 復華台灣科技優息 ETF
+            "tse_00940.tw",  # 元大台灣價值高息 ETF
+            "tse_00900.tw",  # 富邦特選高股息30 ETF
+            "tse_00713.tw",  # 元大台灣高息低波 ETF
+            "tse_00679B.tw", # 元大美債20年 ETF
         ]
     else:
         ex_codes = [
             "tse_t00.tw",  # 台灣加權指數
-            "tse_0050.tw", # 元大台灣50 ETF
             "tse_2330.tw", # 台積電
             "tse_2454.tw", # 聯發科
             "tse_2317.tw", # 鴻海
             "tse_2412.tw", # 中華電
+            "tse_2308.tw", # 台達電
+            "tse_2303.tw", # 聯電
+            "tse_2382.tw", # 廣達
+            "tse_3231.tw", # 緯創
+            "tse_3008.tw", # 大立光
+            "tse_2603.tw", # 長榮
+            "tse_2881.tw", # 富邦金
+            "tse_2002.tw", # 中鋼
+            "tse_0050.tw", # 元大台灣50 ETF
         ]
 
     # mis.twse.com.tw 的 TLS 憑證缺少 Subject Key Identifier 擴充，
@@ -244,11 +294,16 @@ async def fetch_stock_market(query: str = "") -> str:
     if not lines:
         return ""
 
-    return (
-        f"以下為台灣股市即時行情（來源：{source}）：\n"
+    header = "| 名稱 | 代碼 | 現價 | 漲跌 | 漲跌幅 | 更新時間 |"
+    separator = "|---|---|---|---|---|---|"
+    result = (
+        f"以下為台灣股市即時行情（來源：{source}）：\n\n"
+        f"{header}\n{separator}\n"
         + "\n".join(lines)
         + "\n\n請依據以上即時數據回答，不要使用訓練資料中的舊數據。"
     )
+    _MARKET_CACHE[cache_key] = (time.monotonic(), result)
+    return result
 
 
 class DuckDuckSearch(Tool):
