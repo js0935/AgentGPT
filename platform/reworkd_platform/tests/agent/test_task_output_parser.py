@@ -89,6 +89,10 @@ def test_parse_failure(input_text: str, exception: Type[Exception]) -> None:
         ("Random stuff ['Search', 'Identify']", ["Search", "Identify"]),
         # Test case for array within JSON
         ('{"array": ["123", "456"]}', ["123", "456"]),
+        # Test cases for brace-wrapped string lists (llama models occasionally emit {"a","b"} instead of ["a","b"])
+        ('{"在台灣購買股票", "研究基本面"}', ["在台灣購買股票", "研究基本面"]),
+        ('{"Task 1: Research", "Task 2: Develop"}', ["Task 1: Research", "Task 2: Develop"]),
+        ("Some text {\"a\", \"b\"} more", ["a", "b"]),
         # Multiline string cases
         (
             "1. Identify the target\n2. Conduct research\n3. Implement the methods",

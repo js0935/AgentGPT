@@ -49,8 +49,16 @@ def extract_array(input_str: str) -> List[str]:
     match = re.search(regex, input_str)
     if match is not None:
         return ast.literal_eval(match[0])
-    else:
-        return handle_multiline_string(input_str)
+
+    # Fallback：LLM（如 llama-3.1-8b）偶發以花括號 {…} 輸出字串清單（缺 key 的 object），
+    # 例如 {"任務一","任務二"}。僅在內容全為引號字串（無 key-value 冒號）時視為任務清單。
+    brace_regex = r"\{(\s*(?:\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\]|\\.)*')\s*,?)*\s*\}"
+    brace_match = re.search(brace_regex, input_str)
+    if brace_match is not None:
+        quoted = re.findall(r"\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\]|\\.)*'", brace_match[0])
+        return [ast.literal_eval(q) for q in quoted]
+
+    return handle_multiline_string(input_str)
 
 
 def handle_multiline_string(input_str: str) -> List[str]:
