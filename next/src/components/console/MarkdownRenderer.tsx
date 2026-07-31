@@ -20,6 +20,24 @@ const MarkdownRenderer = ({ children, className }: MarkdownRendererProps) => {
       components={{
         pre: CustomPre,
         code: CustomCodeBlock,
+        table: ({ children }) => (
+          <div className="mb-4 overflow-x-auto">
+            <table className="w-full min-w-[560px] border-collapse text-sm text-slate-12">
+              {children}
+            </table>
+          </div>
+        ),
+        thead: ({ children }) => <thead>{children}</thead>,
+        tbody: ({ children }) => <tbody>{children}</tbody>,
+        tr: ({ children }) => <tr className="hover:bg-slate-3">{children}</tr>,
+        th: ({ children }) => (
+          <th className="bg-slate-11 p-2 text-left font-semibold text-white">
+            {children}
+          </th>
+        ),
+        td: ({ children }) => (
+          <td className="border-b border-slate-6 p-2 align-middle">{children}</td>
+        ),
         h1: (props) => <h1 className="text-md mb-2 font-black sm:text-xl">{props.children}</h1>,
         h2: (props) => <h1 className="sm:text-md mb-2 text-sm font-bold">{props.children}</h1>,
         a: (props) => CustomLink({ children: props.children, href: props.href }),

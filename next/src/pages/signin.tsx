@@ -26,9 +26,9 @@ const SignIn = ({ providers }: { providers: Provider }) => {
     .filter((detail): detail is ButtonDetail => detail !== undefined);
 
   return (
-    <GridLayout title="Sign in - Reworkd">
+    <GridLayout title="登入 - Reworkd">
       <div className="grid h-screen w-screen place-items-center bg-gradient-radial from-slate-1 via-20% to-transparent">
-        <div className="flex h-full w-full max-w-screen-lg flex-col items-center justify-center gap-10">
+        <div className="flex h-full w-full max-w-screen-lg flex-col items-center justify-center gap-10 px-4">
           <FadeIn
             duration={1.5}
             initialY={-50}
@@ -47,10 +47,19 @@ const SignIn = ({ providers }: { providers: Provider }) => {
             </div>
           </FadeIn>
           <FadeIn duration={1.5} delay={0.4} initialY={50}>
-            {providers.credentials && <InsecureSignin />}
-            {details.map((detail) => (
-              <ProviderSignInButton key={detail.id} detail={detail} />
-            ))}
+            <div className="flex w-full max-w-md flex-col gap-4 rounded-2xl border border-white/10 bg-slate-12/70 p-8 shadow-[0_8px_40px_rgba(0,0,0,0.35)] backdrop-blur-md sm:p-10">
+              {providers.credentials && <InsecureSignin />}
+              {providers.credentials && details.length > 0 && (
+                <div className="my-1 flex items-center gap-4 text-xs font-medium tracking-wide text-white/40">
+                  <span className="h-px flex-1 bg-white/10" />
+                  或使用其他方式登入
+                  <span className="h-px flex-1 bg-white/10" />
+                </div>
+              )}
+              {details.map((detail) => (
+                <ProviderSignInButton key={detail.id} detail={detail} />
+              ))}
+            </div>
           </FadeIn>
         </div>
       </div>
@@ -62,14 +71,22 @@ const InsecureSignin = () => {
   const [usernameValue, setUsernameValue] = useState("");
 
   return (
-    <div className="flex flex-col">
-      <Input
-        value={usernameValue}
-        onChange={(e) => setUsernameValue(e.target.value)}
-        placeholder="Enter Username"
-        type="text"
-        name="Username Field"
-      />
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
+        <label
+          htmlFor="Username Field"
+          className="text-sm font-semibold text-white/80"
+        >
+          使用者名稱
+        </label>
+        <Input
+          value={usernameValue}
+          onChange={(e) => setUsernameValue(e.target.value)}
+          placeholder="輸入使用者名稱"
+          type="text"
+          name="Username Field"
+        />
+      </div>
       <button
         onClick={() => {
           if (!usernameValue) return;
@@ -80,11 +97,11 @@ const InsecureSignin = () => {
           }).catch(console.error);
         }}
         className={clsx(
-          "mb-4 mt-4 flex items-center rounded-md bg-slate-12 px-10 py-3 text-sm font-semibold text-white transition-colors duration-300 hover:bg-slate-10 sm:text-base",
-          !usernameValue && "cursor-not-allowed"
+          "flex items-center justify-center rounded-md bg-white px-10 py-3 text-sm font-semibold text-slate-12 transition-all duration-300 hover:bg-slate-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-12 active:scale-[0.98] sm:text-base",
+          !usernameValue && "cursor-not-allowed opacity-60"
         )}
       >
-        Sign in with username (Insecure)
+        使用帳號登入（示範模式）
       </button>
     </div>
   );
@@ -97,6 +114,12 @@ interface ButtonDetail {
   icon: JSX.Element;
   color: string;
 }
+
+const providerDisplayNames: { [key: string]: string } = {
+  google: "Google",
+  discord: "Discord",
+  github: "GitHub",
+};
 
 const providerButtonDetails: { [key: string]: ButtonDetail } = {
   google: {
@@ -124,11 +147,11 @@ const ProviderSignInButton = ({ detail }: { detail: ButtonDetail }) => {
       }}
       className={clsx(
         detail.color,
-        "mb-4 flex w-full items-center rounded-md px-10 py-3 text-base font-semibold shadow-md transition-colors duration-300 sm:px-16 sm:py-5 sm:text-xl"
+        "flex w-full items-center justify-center rounded-md px-10 py-3 text-base font-semibold shadow-md transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-12 active:scale-[0.98] sm:px-16 sm:py-5 sm:text-xl"
       )}
     >
       {detail.icon}
-      Sign in with {detail.id}
+      使用 {providerDisplayNames[detail.id] ?? detail.id} 登入
     </button>
   );
 };

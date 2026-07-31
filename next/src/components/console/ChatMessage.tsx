@@ -21,10 +21,15 @@ import { getMessageContainerStyle, getTaskStatusIcon } from "../utils/helpers";
 const ChatMessage = ({ message }: { message: Message }) => {
   const [t] = useTranslation();
   const [isCopied, setIsCopied] = useState(false);
+  const isActionMessage = isAction(message);
+  const isCompletedResult =
+    getTaskStatus(message) === TASK_STATUS_COMPLETED ||
+    getTaskStatus(message) === TASK_STATUS_FINAL;
+  const messagePrefix = getMessagePrefix(message);
 
   const handleCopy = () => {
     try {
-      const textToCopy = isAction(message) ? message.info || "" : message.value;
+      const textToCopy = isActionMessage ? message.info || "" : message.value;
       void navigator.clipboard.writeText(textToCopy);
       setIsCopied(true);
     } catch (error) {
@@ -32,30 +37,32 @@ const ChatMessage = ({ message }: { message: Message }) => {
     }
   };
 
-  if (message.type === MESSAGE_TYPE_GOAL && !isAction(message)) {
+  if (message.type === MESSAGE_TYPE_GOAL && !isActionMessage) {
     return <div className="pb-2 text-2xl sm:text-4xl">{message.value}</div>;
   }
   return (
     <div
       className={clsx(
         getMessageContainerStyle(message),
-        "my-1 mr-2 rounded-lg bg-slate-1 p-2 text-xs shadow-depth-1 hover:border-[#1E88E5]/40 sm:mr-4 sm:p-3",
-        "sm:my-1.5 sm:text-sm",
-        !isAction(message) && "w-fit max-w-full"
+        "my-1.5 mr-2 rounded-lg bg-slate-1 text-xs shadow-depth-1 sm:mr-4 sm:my-2 sm:text-sm",
+        isCompletedResult
+          ? "border-l-4 border-green-500 p-3 sm:p-4"
+          : "p-2 hover:border-[#1E88E5]/40 sm:p-3",
+        !isActionMessage && "w-fit max-w-full"
       )}
     >
-      {message.type !== MESSAGE_TYPE_SYSTEM && !isAction(message) && (
-        <>
-          <div className="mr-2 inline-block h-[0.9em]">{getTaskStatusIcon(message, {})}</div>
-          <span className="mr-2 font-bold">{getMessagePrefix(message)}</span>
-        </>
+      {message.type !== MESSAGE_TYPE_SYSTEM && !isActionMessage && (
+        <div className="mb-1.5 flex items-center gap-1.5">
+          <div className="inline-block h-[0.9em]">{getTaskStatusIcon(message, {})}</div>
+          {messagePrefix && <span className="font-bold">{messagePrefix}</span>}
+        </div>
       )}
 
-      {isAction(message) ? (
+      {isActionMessage ? (
         <>
           <div className="flex flex-row">
             <div className="mr-2 inline-block h-[0.9em]">{getTaskStatusIcon(message, {})}</div>
-            <span className="mr-2 flex-1 font-bold">{getMessagePrefix(message)}</span>
+            <span className="mr-2 flex-1 font-bold">{messagePrefix}</span>
             <Button
               className="justify-end rounded-md text-slate-10 hover:bg-slate-6 hover:text-slate-12"
               onClick={handleCopy}
@@ -64,7 +71,7 @@ const ChatMessage = ({ message }: { message: Message }) => {
               <div className="w-full">{isCopied ? <FaCheck /> : <FiClipboard size={15} />}</div>
             </Button>
           </div>
-          <hr className="my-2 border border-white/20" />
+          <hr className="my-2 border border-white/20 sm:my-3" />
           <div>
             <MarkdownRenderer>{message.info || ""}</MarkdownRenderer>
             <SourceCard content={message.info || ""} />
@@ -72,7 +79,7 @@ const ChatMessage = ({ message }: { message: Message }) => {
         </>
       ) : (
         <>
-          <span>{message.value}</span>
+          <div>{message.value}</div>
           {message.type === MESSAGE_TYPE_SYSTEM &&
             (message.value.toLowerCase().includes("shut") ||
               message.value.toLowerCase().includes("error")) && <FAQ />}
