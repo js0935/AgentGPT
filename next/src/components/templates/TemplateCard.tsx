@@ -16,7 +16,7 @@ const TemplateCard = ({ model }: TemplateCardProps) => {
   const handleClick = () => {
     setNameInput(model.name);
     setGoalInput(model.promptTemplate);
-    router.push("/").catch(console.log);
+    void router.push("/");
   };
   return (
     <div

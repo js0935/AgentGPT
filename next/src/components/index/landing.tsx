@@ -20,8 +20,8 @@ type LandingProps = {
   handleKeyPress: (e: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   goalInputRef: RefObject<HTMLInputElement>;
   goalInput: string;
-  setGoalInput: (string) => void;
-  setShowSignInDialog: (boolean) => void;
+  setGoalInput: (value: string) => void;
+  setShowSignInDialog: (value: boolean) => void;
   setAgentRun: (newName: string, newGoal: string) => void;
 };
 const Landing = (props: LandingProps) => {

@@ -29,7 +29,7 @@ export function useAuth(
     }
 
     if (protectedRoute && status === "authenticated" && isAllowed && !isAllowed(session)) {
-      void push("/404").catch(console.error);
+      void push("/404");
     }
   }, [protectedRoute, isAllowed, status, session, push]);
 

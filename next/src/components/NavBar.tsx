@@ -30,7 +30,7 @@ const navigation = [
 export default function NavBar() {
   const pathname = usePathname();
   const currentIndex = navigation.findIndex(
-    (nav) => pathname.includes(nav.href) || pathname === nav.href
+    (nav) => (pathname?.includes(nav.href) ?? false) || pathname === nav.href
   );
   const [hoveredButtonIndex, setHoveredButtonIndex] = useState(0);
 

@@ -31,8 +31,9 @@ const Combo = <T,>(props: ComboProps<T>) => {
           value={selectedIndex}
           onChange={(e) => {
             const idx = parseInt(e.target.value, 10);
-            if (idx >= 0 && idx < props.items.length) {
-              props.onChange(props.items[idx]);
+            const item = props.items[idx];
+            if (item) {
+              props.onChange(item);
             }
           }}
         >

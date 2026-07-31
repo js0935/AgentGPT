@@ -10,7 +10,7 @@ import { Switch } from "../Switch";
 
 export const ToolsDialog: React.FC<{
   show: boolean;
-  setOpen: (boolean) => void;
+  setOpen: (value: boolean) => void;
 }> = ({ show, setOpen }) => {
   const { activeTools, setToolActive, isSuccess } = useTools();
 
@@ -101,7 +101,7 @@ const SidTool = ({ tool, onChange }: ToolProps) => {
       )}
       </div>
       <Switch
-        value={!sid?.connected ?? false ? false : tool.active}
+        value={!sid?.connected ? false : tool.active}
         onChange={() => onChange(tool.name, !tool.active)}
       />
     </div>

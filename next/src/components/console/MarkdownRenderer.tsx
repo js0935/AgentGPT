@@ -16,7 +16,7 @@ const MarkdownRenderer = ({ children, className }: MarkdownRendererProps) => {
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
-      rehypePlugins={[() => rehypeHighlight({ ignoreMissing: true })]}
+      rehypePlugins={[rehypeHighlight]}
       components={{
         pre: CustomPre,
         code: CustomCodeBlock,
@@ -40,7 +40,7 @@ const MarkdownRenderer = ({ children, className }: MarkdownRendererProps) => {
   );
 };
 
-const CustomPre = ({ children }: { children: ReactNode }) => {
+const CustomPre = ({ children }: { children?: ReactNode }) => {
   const [isCopied, setIsCopied] = useState(false);
 
   const code = React.Children.toArray(children).find(isValidCustomCodeBlock);
@@ -81,7 +81,7 @@ const CustomPre = ({ children }: { children: ReactNode }) => {
 interface CustomCodeBlockProps {
   inline?: boolean;
   className?: string;
-  children: ReactNode;
+  children?: ReactNode;
 }
 
 const CustomCodeBlock = ({ inline, className, children }: CustomCodeBlockProps) => {
@@ -95,7 +95,7 @@ const CustomCodeBlock = ({ inline, className, children }: CustomCodeBlockProps) 
   return <code className={`hljs ${language}`}>{children}</code>;
 };
 
-const CustomLink = ({ children, href }) => {
+const CustomLink = ({ children, href }: { children?: ReactNode; href?: string }) => {
   return (
     <a
       className={clsx(

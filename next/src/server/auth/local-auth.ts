@@ -48,9 +48,9 @@ export const options = (
             })
             .parse(credentials);
 
-          const user = await adapter.getUserByEmail(creds.name);
+          const user = await adapter.getUserByEmail?.(creds.name);
           return user
-            ? adapter.updateUser({
+            ? adapter.updateUser?.({
                 id: user.id,
                 name: creds.name,
                 superAdmin: creds.superAdmin,
@@ -75,11 +75,12 @@ export const options = (
 
       async signIn({ user }) {
         if (user) {
-          const session = await adapter.createSession({
+          const session = await adapter.createSession?.({
             sessionToken: v4(),
             userId: user.id,
             expires: monthFromNow(),
           });
+          if (!session) return false;
 
           // eslint-disable-next-line @typescript-eslint/no-unsafe-call
           setCookie("next-auth.session-token", session.sessionToken, {

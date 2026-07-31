@@ -5,7 +5,7 @@ import Dialog from "../../ui/dialog";
 
 export interface SignInDialogProps {
   show: boolean;
-  setOpen: (boolean) => void;
+  setOpen: (value: boolean) => void;
 }
 
 export const SignInDialog = ({ show, setOpen }: SignInDialogProps) => {

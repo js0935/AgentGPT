@@ -14,7 +14,7 @@ import HideShow from "../motions/HideShow";
 
 interface ChatControls {
   value: string;
-  onChange: (string) => void;
+  onChange: (value: string) => void;
   handleChat: () => Promise<void>;
   loading?: boolean;
 }

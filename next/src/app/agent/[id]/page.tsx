@@ -20,7 +20,7 @@ export default function AgentPage() {
   const [showCopied, setShowCopied] = useState(false);
   const router = useRouter();
   const params = useParams();
-  const agentId = typeof params.id === "string" ? params.id : "";
+  const agentId = typeof params?.id === "string" ? params.id : "";
 
   const getAgent = api.agent.findById.useQuery(agentId, {
     enabled: !!agentId,

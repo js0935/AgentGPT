@@ -10,9 +10,9 @@ import type AutonomousAgent from "../services/agent/autonomous-agent";
 interface AgentSlice {
   agent: AutonomousAgent | null;
   lifecycle: AgentLifecycle;
-  setLifecycle: (AgentLifecycle) => void;
+  setLifecycle: (lifecycle: AgentLifecycle) => void;
   summarized: boolean;
-  setSummarized: (boolean) => void;
+  setSummarized: (value: boolean) => void;
   isAgentThinking: boolean;
   setIsAgentThinking: (isThinking: boolean) => void;
   setAgent: (newAgent: AutonomousAgent | null) => void;

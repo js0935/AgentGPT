@@ -24,14 +24,14 @@ const defaultState: SidebarSettings = {
 };
 
 const setMobile =
-  (settings: SidebarSettings, setSettings: (SidebarSettings) => void) => (open: boolean) =>
+  (settings: SidebarSettings, setSettings: (settings: SidebarSettings) => void) => (open: boolean) =>
     setSettings({
       mobile: open,
       desktop: settings.desktop,
     });
 
 const setDesktop =
-  (settings: SidebarSettings, setSettings: (SidebarSettings) => void) => (open: boolean) =>
+  (settings: SidebarSettings, setSettings: (settings: SidebarSettings) => void) => (open: boolean) =>
     setSettings({
       mobile: settings.mobile,
       desktop: open,

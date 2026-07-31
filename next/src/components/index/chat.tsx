@@ -18,7 +18,7 @@ type ChatProps = {
   handlePlay: (name: string, goal: string) => void;
   nameInput: string;
   goalInput: string;
-  setShowSignInDialog: (boolean) => void;
+  setShowSignInDialog: (value: boolean) => void;
   setAgentRun: (newName: string, newGoal: string) => void;
 };
 const Chat = (props: ChatProps) => {

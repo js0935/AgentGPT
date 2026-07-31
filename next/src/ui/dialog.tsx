@@ -7,10 +7,11 @@ interface Props {
   title?: string;
   children?: React.ReactNode;
   actions?: React.ReactNode;
+  icon?: React.ReactNode;
   inline?: boolean;
 }
 
-const Dialog = ({ open, setOpen, title, children, actions }: Props) => {
+const Dialog = ({ open, setOpen, title, children, actions, icon }: Props) => {
   return (
     <Transition appear show={open} as={Fragment}>
       <HeadlessDialog as="div" className="relative z-50" onClose={() => setOpen(false)}>
@@ -38,6 +39,7 @@ const Dialog = ({ open, setOpen, title, children, actions }: Props) => {
               leaveTo="opacity-0 scale-95"
             >
               <HeadlessDialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-slate-1 p-6 text-left align-middle shadow-depth-2 transition-all">
+                {icon && <div className="mb-2">{icon}</div>}
                 {title && (
                   <HeadlessDialog.Title
                     as="h3"
