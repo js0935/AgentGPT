@@ -1,6 +1,8 @@
 ﻿# 獨立啟動前端 production server（WMI 獨立進程，關閉本視窗不會影響）
 # 前置條件：已執行過 next build（存在 .next/BUILD_ID）
 
+[Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
+
 # 檢查 production build 是否存在
 if (-not (Test-Path -LiteralPath "C:\Users\JS\Desktop\base\AgentGPT\next\.next\BUILD_ID")) {
     Write-Host "找不到 production build！請先建置："

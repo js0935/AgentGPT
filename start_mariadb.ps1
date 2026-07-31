@@ -1,5 +1,7 @@
 ﻿# 獨立啟動 MariaDB（port 3307，WMI 獨立進程，關閉本視窗不會影響）
 
+[Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
+
 # 檢查 port 3307 是否已被佔用
 $existing = Get-NetTCPConnection -LocalPort 3307 -State Listen -ErrorAction SilentlyContinue
 if ($existing) {
