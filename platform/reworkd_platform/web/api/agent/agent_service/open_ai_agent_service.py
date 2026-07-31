@@ -2,6 +2,7 @@
 
 from typing import Any, AsyncGenerator, List, Optional
 
+import json
 from fastapi.responses import StreamingResponse as FastAPIStreamingResponse
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.output_parsers import PydanticOutputParser
@@ -119,19 +120,32 @@ class OpenAIAgentService(AgentService):
         )
 
         try:
+            tools = [
+                {"type": "function", "function": func}
+                for func in functions
+            ]
             response = await self.model.ainvoke(
                 prompt.to_messages(),
-                functions=functions,
+                tools=tools,
             )
 
-            function_call = response.additional_kwargs.get("function_call", {})
-            completion = function_call.get("arguments", "")
+            completion = ""
+            action = ""
+            if response.additional_kwargs.get("function_call"):
+                function_call = response.additional_kwargs["function_call"]
+                action = function_call.get("name", "")
+                completion = function_call.get("arguments", "")
+            elif response.tool_calls:
+                tool_call = response.tool_calls[0]
+                action = tool_call.get("name", "")
+                args = tool_call.get("args", "")
+                completion = json.dumps(args) if isinstance(args, dict) else str(args)
 
             try:
                 pydantic_parser = PydanticOutputParser(pydantic_object=AnalysisArguments)
                 analysis_arguments = parse_with_handling(pydantic_parser, completion)
                 return Analysis(
-                    action=function_call.get("name", get_tool_name(get_default_tool())),
+                    action=action or get_tool_name(get_default_tool()),
                     **analysis_arguments.model_dump(),
                 )
             except (OpenAIError, ValidationError):
@@ -152,6 +166,8 @@ class OpenAIAgentService(AgentService):
             self.model.max_tokens = max(self.model.max_tokens - 1000, 3000)
 
         tool_class = get_tool_from_name(analysis.action)
+        if is_stock_market_query(task) or is_stock_market_query(goal):
+            tool_class = get_tool_from_name("duckducksearch")
         return await tool_class(self.model, self.settings.language).call(
             goal,
             task,

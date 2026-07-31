@@ -138,6 +138,14 @@ class DuckDuckSearch(Tool):
     async def _call(
         self, goal: str, task: str, input_str: str, *args: Any, **kwargs: Any
     ) -> FastAPIStreamingResponse:
+        if is_stock_market_query(input_str) or is_stock_market_query(task):
+            market_data = await fetch_stock_market()
+            if market_data:
+                snippet = CitedSnippet(1, market_data, "https://finance.yahoo.com")
+                return summarize_with_sources(
+                    self.model, self.language, goal, task, [snippet]
+                )
+
         raw_results = await _duckduckgo_search_results(input_str, max_results=5)
 
         snippets: List[CitedSnippet] = []

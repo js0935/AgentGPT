@@ -50,7 +50,12 @@ class Search(Tool):
 
     @staticmethod
     def available() -> bool:
-        return settings.serp_api_key is not None and settings.serp_api_key != ""
+        key = settings.serp_api_key
+        return key is not None and key != "" and key != "changeme"
+
+    @staticmethod
+    async def dynamic_available(user, oauth_crud) -> bool:
+        return Search.available()
 
     async def call(
         self, goal: str, task: str, input_str: str, *args: Any, **kwargs: Any
