@@ -9,7 +9,6 @@ import type { Adapter, AdapterUser } from "next-auth/adapters";
 
 import { authOptions as prodOptions } from "./auth";
 import { options as devOptions } from "./local-auth";
-import { env } from "../../env/server.mjs";
 import { prisma } from "../db";
 
 function overridePrisma<T>(fn: (user: T) => Awaitable<AdapterUser>) {
@@ -61,10 +60,12 @@ export const authOptions = (
   req: NextApiRequest | IncomingMessage,
   res: NextApiResponse | ServerResponse
 ) => {
-  const options =
-    env.NEXT_PUBLIC_VERCEL_ENV === "development"
-      ? devOptions(commonOptions.adapter, req, res)
-      : prodOptions;
+  // 本機存取（localhost）一律使用 local-auth（輸入名稱登入）
+  // 部署環境（非 localhost）才使用 OAuth providers
+  const host = req.headers?.host ?? "";
+  const isLocalhost =
+    host.startsWith("localhost") || host.startsWith("127.0.0.1") || host.startsWith("[::1]");
+  const options = isLocalhost ? devOptions(commonOptions.adapter, req, res) : prodOptions;
 
   return merge(commonOptions, options) as AuthOptions;
 };
