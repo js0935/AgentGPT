@@ -40,6 +40,20 @@ STOCK_MARKET_KEYWORDS = [
 
 ETF_KEYWORDS = ["etf", "基金", "配息", "殖利率", "投資組合"]
 
+SYMBOL_ZH_NAMES = {
+    "^TWII": "台灣加權指數",
+    "0050.TW": "元大台灣50",
+    "0056.TW": "元大高股息",
+    "006208.TW": "富邦台50",
+    "00878.TW": "國泰永續高股息",
+    "00919.TW": "群益台灣精選高息",
+    "00929.TW": "復華台灣科技優息",
+    "2330.TW": "台積電",
+    "2454.TW": "聯發科",
+    "2317.TW": "鴻海",
+    "2412.TW": "中華電",
+}
+
 
 def is_stock_market_query(message: str) -> bool:
     """判斷查詢是否與股市/股價/ETF 相關。"""
@@ -95,7 +109,12 @@ async def fetch_stock_market(query: str = "") -> str:
                     meta = data["chart"]["result"][0]["meta"]
                     price = meta.get("regularMarketPrice")
                     prev = meta.get("chartPreviousClose") or meta.get("previousClose")
-                    name = meta.get("shortName") or meta.get("longName") or symbol
+                    name = (
+                        SYMBOL_ZH_NAMES.get(symbol)
+                        or meta.get("shortName")
+                        or meta.get("longName")
+                        or symbol
+                    )
                     if price is None or prev is None:
                         continue
                     change = price - prev
