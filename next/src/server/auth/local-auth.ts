@@ -36,15 +36,14 @@ export const options = (
         name: "Username, Development Only (Insecure)",
         credentials: {
           name: { label: "Username", type: "text" },
-          superAdmin: { label: "SuperAdmin", type: "text" },
         },
         async authorize(credentials, req) {
           if (!credentials) return null;
 
           const creds = z
             .object({
-              name: z.string().min(1),
-              superAdmin: z.preprocess((str) => str === "true", z.boolean()).default(false),
+              // 限制長度避免過長字串進 DB；zod 預設會剝離未知欄位
+              name: z.string().min(1).max(50),
             })
             .parse(credentials);
 
@@ -53,7 +52,8 @@ export const options = (
             ? adapter.updateUser?.({
                 id: user.id,
                 name: creds.name,
-                superAdmin: creds.superAdmin,
+                // 安全修復：superAdmin 不接受使用者傳入（原版可 POST superAdmin:true 自封管理員）
+                superAdmin: false,
               })
             : adapter.createUser({
                 name: creds.name,

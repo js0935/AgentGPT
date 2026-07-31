@@ -10,13 +10,17 @@ AgentGPT FastAPI 應用程式工廠
 
 from importlib import metadata
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import UJSONResponse
 
 from reworkd_platform.logging import configure_logging
 from reworkd_platform.settings import settings
-from reworkd_platform.web.api.error_handling import platformatic_exception_handler
+from reworkd_platform.web.api.error_handling import (
+    http_exception_handler,
+    platformatic_exception_handler,
+    unhandled_exception_handler,
+)
 from reworkd_platform.web.api.errors import PlatformaticError
 from reworkd_platform.web.api.router import api_router
 from reworkd_platform.web.lifetime import (
@@ -63,6 +67,9 @@ def get_app() -> FastAPI:
 
     app.include_router(router=api_router, prefix="/api")
 
+    # 錯誤處理階層：特定例外 → HTTPException → 通用 Exception（最後防線）
     app.exception_handler(PlatformaticError)(platformatic_exception_handler)
+    app.exception_handler(HTTPException)(http_exception_handler)
+    app.exception_handler(Exception)(unhandled_exception_handler)
 
     return app
