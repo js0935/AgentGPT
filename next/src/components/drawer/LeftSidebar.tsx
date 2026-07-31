@@ -87,7 +87,7 @@ const LeftSidebar = ({ show, setShow, onReload }: DisplayProps & { onReload?: ()
             key={`${index}-${agent.name}`}
             className="flex w-full rounded-md p-2 text-sm font-semibold"
             text={agent.name}
-            onClick={() => void router.push(`/agent?id=${agent.id}`)}
+            onClick={() => void router.push(`/agent/${agent.id}`)}
           />
         ))}
       </div>
