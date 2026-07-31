@@ -38,29 +38,43 @@ STOCK_MARKET_KEYWORDS = [
     "stock", "market", "TAIEX", "TWII", "shares", "share price",
 ]
 
+ETF_KEYWORDS = ["etf", "基金", "配息", "殖利率", "投資組合"]
+
 
 def is_stock_market_query(message: str) -> bool:
-    """判斷查詢是否與股市/股價相關。"""
+    """判斷查詢是否與股市/股價/ETF 相關。"""
     lower = message.lower()
-    return any(kw in lower for kw in STOCK_MARKET_KEYWORDS)
+    return any(kw in lower for kw in STOCK_MARKET_KEYWORDS) or any(
+        kw in lower for kw in ETF_KEYWORDS
+    )
 
 
-async def fetch_stock_market() -> str:
+async def fetch_stock_market(query: str = "") -> str:
     """從 Yahoo Finance 抓取台灣股市即時行情（免 API key）。
 
-    回傳格式：
-    [1] 加權指數 ^TWII: 42593.78 (前收 43634.19, 漲跌 -1040.41, -2.38%) (更新時間 ...)
-    ...
+    query 含 ETF/基金相關字詞時抓熱門 ETF 報價，否則抓指數與權值股。
     失敗時回傳空字串。
     """
-    symbols = [
-        "^TWII",   # 台灣加權指數
-        "0050.TW", # 元大台灣50 ETF
-        "2330.TW", # 台積電
-        "2454.TW", # 聯發科
-        "2317.TW", # 鴻海
-        "2412.TW", # 中華電
-    ]
+    lower = query.lower()
+    if any(kw in lower for kw in ETF_KEYWORDS):
+        symbols = [
+            "^TWII",   # 台灣加權指數
+            "0050.TW", # 元大台灣50 ETF
+            "0056.TW", # 元大高股息 ETF
+            "006208.TW", # 富邦台50 ETF
+            "00878.TW", # 國泰永續高股息 ETF
+            "00919.TW", # 群益台灣精選高息 ETF
+            "00929.TW", # 復華台灣科技優息 ETF
+        ]
+    else:
+        symbols = [
+            "^TWII",   # 台灣加權指數
+            "0050.TW", # 元大台灣50 ETF
+            "2330.TW", # 台積電
+            "2454.TW", # 聯發科
+            "2317.TW", # 鴻海
+            "2412.TW", # 中華電
+        ]
     lines: list[str] = []
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
@@ -139,7 +153,7 @@ class DuckDuckSearch(Tool):
         self, goal: str, task: str, input_str: str, *args: Any, **kwargs: Any
     ) -> FastAPIStreamingResponse:
         if is_stock_market_query(input_str) or is_stock_market_query(task):
-            market_data = await fetch_stock_market()
+            market_data = await fetch_stock_market(query=f"{task} {input_str}")
             if market_data:
                 snippet = CitedSnippet(1, market_data, "https://finance.yahoo.com")
                 return summarize_with_sources(

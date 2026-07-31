@@ -2,6 +2,7 @@
 
 from typing import Any, AsyncGenerator, List, Optional
 
+import asyncio
 import json
 from fastapi.responses import StreamingResponse as FastAPIStreamingResponse
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -26,6 +27,8 @@ from reworkd_platform.web.api.agent.prompts import (
     analyze_task_prompt,
     chat_prompt,
     create_tasks_prompt,
+    debate_analyst_prompt,
+    debate_synthesis_prompt,
     start_goal_prompt,
 )
 from reworkd_platform.web.api.agent.task_output_parser import TaskOutputParser
@@ -43,6 +46,34 @@ from reworkd_platform.web.api.agent.tools.duckduck_search import (
 )
 from reworkd_platform.web.api.agent.tools.utils import summarize
 from reworkd_platform.web.api.errors import OpenAIError
+
+
+DEBATE_KEYWORDS = [
+    "分析", "推薦", "建議", "比較", "評估", "看法", "評價",
+    "優缺點", "討論", "辯論", "值得", "如何選擇", "怎麼選",
+    "哪個", "選哪", "利弊",
+]
+
+DEBATE_PERSPECTIVES = [
+    (
+        "成長與機會分析師",
+        "從成長潛力與投資機會的角度分析。指出最有潛力的標的或方向、潛在催化劑、以及為何現在值得關注。不要重複或回應其他分析師的觀點。",
+    ),
+    (
+        "風險與保守分析師",
+        "從風險管理與保守穩健的角度分析。指出風險因素、波動來源、估值過高的可能、下行風險，以及資產配置上的注意事項。不要重複或回應其他分析師的觀點。",
+    ),
+    (
+        "平衡與價值分析師",
+        "從基本面與長期價值的角度分析。評估標的品質、當前價格是否合理、長期持有價值，並給出務實的取捨建議。不要重複或回應其他分析師的觀點。",
+    ),
+]
+
+
+def is_debate_query(message: str) -> bool:
+    """判斷是否為需要多方觀點討論的深度分析問題。"""
+    lower = message.lower()
+    return any(kw in lower for kw in DEBATE_KEYWORDS)
 
 
 async def _stream_lcel(
@@ -241,7 +272,7 @@ class OpenAIAgentService(AgentService):
         search_context = ""
         try:
             if is_stock_market_query(message):
-                search_result = await fetch_stock_market()
+                search_result = await fetch_stock_market(query=message)
             else:
                 search_result = await web_search_simple(message, max_results=5)
             if search_result:
@@ -252,6 +283,9 @@ class OpenAIAgentService(AgentService):
                 )
         except Exception:
             logger.warning("Real-time data fetch failed in chat, continuing without it")
+
+        if is_debate_query(message):
+            return await self._run_debate(message, search_context)
 
         messages = [SystemMessagePromptTemplate(prompt=chat_prompt)]
         if search_context:
@@ -271,6 +305,73 @@ class OpenAIAgentService(AgentService):
         )
 
         chain: Runnable = prompt | self.model
+
+        async def generate() -> AsyncGenerator[str, None]:
+            async for chunk in chain.astream({"language": self.settings.language}):
+                if isinstance(chunk, str):
+                    yield chunk
+                elif hasattr(chunk, "content") and chunk.content:
+                    yield chunk.content
+
+        return FastAPIStreamingResponse(
+            generate(),
+            media_type="text/event-stream",
+        )
+
+    async def _run_debate(
+        self,
+        message: str,
+        search_context: str,
+    ) -> FastAPIStreamingResponse:
+        self.model.max_tokens = 2000
+
+        context = (
+            search_context
+            or "沒有提供外部即時資料。請基於你的知識回答，並明確說明資訊可能不是最新的。"
+        )
+
+        async def analyst(role: str, role_instruction: str) -> str:
+            prompt = ChatPromptTemplate.from_messages(
+                [
+                    SystemMessagePromptTemplate(prompt=debate_analyst_prompt),
+                    SystemMessage(content=context),
+                    HumanMessage(content=message),
+                ]
+            )
+            formatted = prompt.format_prompt(
+                language=self.settings.language,
+                role=role,
+                role_instruction=role_instruction,
+            )
+            response = await self.model.ainvoke(formatted.to_messages())
+            return str(response.content)
+
+        analyses = await asyncio.gather(
+            *(
+                analyst(role, instruction)
+                for role, instruction in DEBATE_PERSPECTIVES
+            )
+        )
+
+        combined = "\n\n".join(
+            f"### {role}\n{content}"
+            for (role, _), content in zip(DEBATE_PERSPECTIVES, analyses)
+        )
+
+        synthesis_prompt = ChatPromptTemplate.from_messages(
+            [
+                SystemMessagePromptTemplate(prompt=debate_synthesis_prompt),
+                SystemMessage(content=f"三位分析師的獨立分析：\n\n{combined}"),
+                HumanMessage(content=message),
+            ]
+        )
+
+        self.token_service.calculate_max_tokens(
+            self.model,
+            synthesis_prompt.format_prompt(language=self.settings.language).to_string(),
+        )
+
+        chain: Runnable = synthesis_prompt | self.model
 
         async def generate() -> AsyncGenerator[str, None]:
             async for chunk in chain.astream({"language": self.settings.language}):
