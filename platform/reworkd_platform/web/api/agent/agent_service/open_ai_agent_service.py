@@ -35,7 +35,11 @@ from reworkd_platform.web.api.agent.tools.tools import (
     get_tool_name,
     get_user_tools,
 )
-from reworkd_platform.web.api.agent.tools.duckduck_search import web_search_simple
+from reworkd_platform.web.api.agent.tools.duckduck_search import (
+    fetch_stock_market,
+    is_stock_market_query,
+    web_search_simple,
+)
 from reworkd_platform.web.api.agent.tools.utils import summarize
 from reworkd_platform.web.api.errors import OpenAIError
 
@@ -217,18 +221,21 @@ class OpenAIAgentService(AgentService):
     ) -> FastAPIStreamingResponse:
         self.model.model_name = "meta/llama-3.1-8b-instruct"
 
-        # 自動搜尋即時資訊
+        # 自動取得即時資訊：股市問題用 Yahoo Finance 即時行情，其餘用網頁搜尋
         search_context = ""
         try:
-            search_result = await web_search_simple(message, max_results=5)
+            if is_stock_market_query(message):
+                search_result = await fetch_stock_market()
+            else:
+                search_result = await web_search_simple(message, max_results=5)
             if search_result:
                 search_context = (
-                    f"以下為從網路搜尋取得的最新資訊（搜尋關鍵字：{message}）：\n"
+                    f"以下為即時取得的資訊（查詢：{message}）：\n"
                     f"{search_result}\n\n"
-                    "請優先使用以上資訊回答。如果搜尋結果與問題無關，請忽略它們。"
+                    "請優先使用以上資訊回答。如果資訊與問題無關，請忽略它們。"
                 )
         except Exception:
-            logger.warning("Web search failed in chat, continuing without search results")
+            logger.warning("Real-time data fetch failed in chat, continuing without it")
 
         messages = [SystemMessagePromptTemplate(prompt=chat_prompt)]
         if search_context:
